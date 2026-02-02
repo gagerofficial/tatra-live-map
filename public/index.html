@@ -9,142 +9,93 @@
             --bg: #0f1115;
             --panel: rgba(24, 28, 35, 0.95);
             --text: #e0e0e0;
+            --danger: #ff4444;
+            --success: #00ff00;
         }
 
         body { 
-            margin: 0; 
-            background: var(--bg); 
-            color: var(--text); 
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-            overflow: hidden; 
+            margin: 0; background: var(--bg); color: var(--text); 
+            font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden; 
         }
 
-        /* Modern rácsháló */
+        /* Térkép rácshálóval */
         #map { 
-            width: 100vw; 
-            height: 100vh; 
-            position: relative; 
-            background-image: 
-                radial-gradient(circle, #2a2d35 1px, transparent 1px);
-            background-size: 40px 40px;
-            cursor: crosshair;
+            width: 100vw; height: 100vh; position: relative; 
+            background-color: #1a1c23;
+            background-image: radial-gradient(circle, #2a2d35 1px, transparent 1px);
+            background-size: 50px 50px;
         }
 
-        /* A villamos ikonja */
+        /* Villamos ikon */
         .tram { 
-            position: absolute; 
-            width: 16px; 
-            height: 40px; 
-            background: var(--accent); 
-            border: 2px solid #000;
-            transition: all 0.8s linear;
-            border-radius: 4px;
-            box-shadow: 0 0 15px rgba(255, 204, 0, 0.4);
-            z-index: 10;
+            position: absolute; width: 18px; height: 45px; 
+            background: var(--accent); border: 2px solid #000;
+            transition: all 0.9s linear; border-radius: 4px;
+            box-shadow: 0 0 15px rgba(255, 204, 0, 0.3); z-index: 10;
         }
 
-        /* Jelölő vonal a villamos orrának */
-        .tram::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 50%;
-            width: 100%; height: 4px;
-            background: #000;
-            transform: translateX(-50%);
-        }
-
-        /* Lebegő felirat a villamos felett */
+        /* Felirat a villamos felett */
         .label { 
-            position: absolute; 
-            font-size: 11px; 
-            font-weight: 700;
-            background: var(--panel); 
-            color: white;
-            padding: 4px 8px; 
-            border-radius: 4px;
-            transform: translate(-50%, -45px); 
-            left: 50%;
-            white-space: nowrap;
-            border: 1px solid var(--accent);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            position: absolute; font-size: 11px; font-weight: bold;
+            background: var(--panel); color: white; padding: 4px 8px; 
+            border-radius: 4px; transform: translate(-50%, -50px); 
+            left: 50%; white-space: nowrap; border: 1px solid var(--accent);
         }
 
-        /* Profi Oldalsáv */
+        /* Oldalsáv */
         #sidebar { 
-            position: fixed; 
-            top: 20px; 
-            left: 20px; 
-            background: var(--panel); 
-            padding: 0; 
-            border-radius: 12px; 
-            width: 300px; 
-            border: 1px solid #333;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
-            z-index: 100;
-            backdrop-filter: blur(10px);
+            position: fixed; top: 20px; left: 20px; 
+            background: var(--panel); width: 300px; border-radius: 12px; 
+            border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 100; backdrop-filter: blur(10px);
         }
 
         .header {
-            background: var(--accent);
-            color: black;
-            padding: 15px;
-            border-radius: 11px 11px 0 0;
-            font-weight: 900;
-            text-transform: uppercase;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            background: var(--accent); color: black; padding: 15px;
+            border-radius: 11px 11px 0 0; font-weight: 900;
+            display: flex; justify-content: space-between;
         }
 
         .content { padding: 20px; }
 
         .stat-card {
-            background: rgba(255,255,255,0.05);
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            border-left: 3px solid var(--accent);
+            background: rgba(255,255,255,0.05); padding: 12px;
+            border-radius: 8px; margin-bottom: 12px; border-left: 4px solid var(--accent);
         }
 
-        .stat-label { font-size: 10px; text-transform: uppercase; color: #888; display: block; }
-        .stat-value { font-size: 16px; font-weight: bold; display: block; margin-top: 2px; }
+        .stat-label { font-size: 10px; text-transform: uppercase; color: #888; }
+        .stat-value { font-size: 16px; font-weight: bold; display: block; margin-top: 4px; }
 
-        .live-dot {
-            width: 8px; height: 8px;
-            background: #00ff00;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 5px;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.3; }
-            100% { opacity: 1; }
+        .delay-tag {
+            font-size: 12px; padding: 2px 6px; border-radius: 4px; font-weight: bold;
         }
     </style>
 </head>
 <body>
     <div id="sidebar">
         <div class="header">
-            <span>FORGALMI FELÜGYELET</span>
-            <div class="live-dot"></div>
+            <span>DISPATCHER CENTRE</span>
+            <span id="live-indicator">● LIVE</span>
         </div>
         <div class="content">
-            <div id="tram-info">
-                <div class="stat-card">
-                    <span class="stat-label">Aktív Járművezető</span>
-                    <span id="driver-name" class="stat-value">KERESÉS...</span>
-                </div>
-                <div class="stat-card" style="border-left-color: #00ccff;">
-                    <span class="stat-label">Pályasebesség</span>
-                    <span id="speed-val" class="stat-value">0 km/h</span>
-                </div>
-                <div class="stat-card" style="border-left-color: #ff4444;">
-                    <span class="stat-label">Jelenlegi Pozíció</span>
-                    <span id="pos-val" class="stat-value">0, 0</span>
-                </div>
+            <div class="stat-card">
+                <span class="stat-label">JÁRAT ÉS VEZETŐ</span>
+                <span class="stat-value"><span id="line-id">--</span>. vonal | <span id="driver-name">---</span></span>
+            </div>
+            
+            <div class="stat-card" style="border-left-color: #00ccff;">
+                <span class="stat-label">SEBESSÉG</span>
+                <span id="speed-val" class="stat-value">0 km/h</span>
+            </div>
+
+            <div class="stat-card" style="border-left-color: #ffcc00;">
+                <span class="stat-label">KÖVETKEZŐ MEGÁLLÓ</span>
+                <span id="next-stop" class="stat-value">---</span>
+            </div>
+
+            <div class="stat-card" id="status-card" style="border-left-color: var(--success);">
+                <span class="stat-label">MENETRENDI STÁTUSZ</span>
+                <span id="status-text" class="stat-value">Várakozás...</span>
             </div>
         </div>
     </div>
@@ -154,25 +105,22 @@
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script>
         const socket = io();
-        const map = document.getElementById('map');
         const tramElements = {};
 
         socket.on('tramUpdate', (data) => {
-            // Villamos létrehozása/frissítése a térképen
+            // 1. Villamos ikon kezelése
             if (!tramElements[data.id]) {
                 const el = document.createElement('div');
                 el.className = 'tram';
-                el.id = 't-' + data.id;
-                map.appendChild(el);
+                el.innerHTML = `<div class="label" id="label-${data.id}"></div>`;
+                document.getElementById('map').appendChild(el);
                 tramElements[data.id] = el;
             }
 
             const tramEl = tramElements[data.id];
-            
-            // Felirat frissítése a sárga ikon felett - JAVÍTVA
-            tramEl.innerHTML = `<div class="label">${data.line} | ${data.driver}</div>`;
-            
-            // Pozícionálás
+            const labelEl = document.getElementById(`label-${data.id}`);
+
+            // 2. Pozícionálás (Roblox -> Web)
             const scale = 0.1; 
             const centerX = window.innerWidth / 2;
             const centerY = window.innerHeight / 2;
@@ -180,11 +128,36 @@
             tramEl.style.left = (centerX + (data.x * scale)) + 'px';
             tramEl.style.top = (centerY + (data.z * scale)) + 'px';
             tramEl.style.transform = `translate(-50%, -50%) rotate(${data.heading}deg)`;
-            
-            // Oldalsáv frissítése
+
+            // 3. Adatok frissítése az oldalsávon
+            document.getElementById('line-id').innerText = data.line;
             document.getElementById('driver-name').innerText = data.driver;
             document.getElementById('speed-val').innerText = data.speed + " km/h";
-            document.getElementById('pos-val').innerText = `${data.x}, ${data.z}`;
+            document.getElementById('next-stop').innerText = data.nextStop;
+
+            // 4. Késés és Státusz logika
+            const statusText = document.getElementById('status-text');
+            const statusCard = document.getElementById('status-card');
+            const labelContent = `<b>${data.line}</b> | ${data.driver}`;
+
+            if (data.delay > 30) {
+                const mins = Math.floor(data.delay / 60);
+                const secs = data.delay % 60;
+                statusText.innerText = `KÉSÉS: ${mins}p ${secs}s`;
+                statusText.style.color = "#ff4444";
+                statusCard.style.borderLeftColor = "#ff4444";
+                labelEl.innerHTML = labelContent + ` <span style="color:#ff4444">⚠️</span>`;
+            } else if (data.delay < -20) {
+                statusText.innerText = `SIETÉS`;
+                statusText.style.color = "#ffcc00";
+                statusCard.style.borderLeftColor = "#ffcc00";
+                labelEl.innerHTML = labelContent;
+            } else {
+                statusText.innerText = `MENETREND SZERINT`;
+                statusText.style.color = "#00ff00";
+                statusCard.style.borderLeftColor = "#00ff00";
+                labelEl.innerHTML = labelContent;
+            }
         });
     </script>
 </body>
