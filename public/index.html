@@ -3,52 +3,116 @@
 <head>
     <title>Tatra T5C5 Live Radar</title>
     <style>
-        body { margin: 0; background: #1a1a1a; color: white; font-family: sans-serif; overflow: hidden; }
-        #map { width: 100vw; height: 100vh; position: relative; background: #222; }
-        .tram { 
-            position: absolute; width: 12px; height: 30px; 
-            background: #ffcc00; border: 2px solid #000;
-            transition: all 1s linear; border-radius: 3px;
+        body { margin: 0; background: #1a1a1a; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; }
+        
+        /* Rács háttér, hogy lásd a térteret */
+        #map { 
+            width: 100vw; 
+            height: 100vh; 
+            position: relative; 
+            background-color: #222;
+            background-image: 
+                linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+                linear-gradient(90, rgba(255,255,255,.05) 1px, transparent 1px);
+            background-size: 50px 50px;
         }
-        .label { position: absolute; font-size: 10px; background: rgba(0,0,0,0.7); padding: 2px; transform: translateY(-20px); white-space: nowrap;}
-        #sidebar { position: fixed; top: 10px; left: 10px; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 8px; width: 250px; }
+
+        .tram { 
+            position: absolute; 
+            width: 15px; 
+            height: 35px; 
+            background: #ffcc00; 
+            border: 2px solid #000;
+            transition: all 0.5s linear; /* Gyorsabb követés */
+            border-radius: 3px;
+            z-index: 10;
+        }
+
+        .label { 
+            position: absolute; 
+            font-size: 11px; 
+            font-weight: bold;
+            background: rgba(0,0,0,0.8); 
+            color: #fff;
+            padding: 2px 6px; 
+            border-radius: 4px;
+            transform: translate(-50%, -40px); 
+            left: 50%;
+            white-space: nowrap;
+            border: 1px solid #ffcc00;
+        }
+
+        #sidebar { 
+            position: fixed; 
+            top: 20px; 
+            left: 20px; 
+            background: rgba(24, 26, 31, 0.9); 
+            padding: 20px; 
+            border-radius: 12px; 
+            width: 260px; 
+            border-left: 5px solid #ffcc00;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 100;
+        }
+
+        h2 { margin-top: 0; color: #ffcc00; letter-spacing: 1px; }
+        .stat-row { margin-bottom: 8px; font-size: 14px; }
+        .stat-val { color: #aaa; }
     </style>
 </head>
 <body>
     <div id="sidebar">
-        <h2>Live Dispatcher</h2>
-        <div id="tram-list">Várakozás adatokra...</div>
+        <h2>DISPATCHER</h2>
+        <div id="tram-list">
+            <div class="stat-row">Rendszer: <span class="stat-val">Online</span></div>
+            <hr style="border: 0; border-top: 1px solid #444; margin: 15px 0;">
+            <div id="active-data">Várakozás a villamosra...</div>
+        </div>
     </div>
     <div id="map"></div>
 
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script>
+        // Kapcsolódás a Railway szerverhez
         const socket = io();
         const map = document.getElementById('map');
-        const list = document.getElementById('tram-list');
+        const activeData = document.getElementById('active-data');
         const tramElements = {};
 
+        socket.on('connect', () => {
+            console.log("Sikeresen kapcsolódva a központhoz!");
+        });
+
         socket.on('tramUpdate', (data) => {
-            // Villamos létrehozása vagy frissítése a térképen
+            console.log("Adat érkezett:", data);
+            
             if (!tramElements[data.id]) {
                 const el = document.createElement('div');
                 el.className = 'tram';
-                el.innerHTML = `<div class="label">${data.line} - ${data.driver}</div>`;
+                el.innerHTML = `<div class="label">${data.line} | ${data.driver}</div>`;
                 map.appendChild(el);
                 tramElements[data.id] = el;
             }
             
-            // Pozícionálás (A Roblox X,Z koordinátáit le kell skáláznod a térképedre)
-            const scale = 0.5; // Állítsd be a mapod méretéhez
-            tramElements[data.id].style.left = (window.innerWidth/2 + data.x * scale) + 'px';
-            tramElements[data.id].style.top = (window.innerHeight/2 + data.z * scale) + 'px';
-            tramElements[data.id].style.transform = `rotate(${data.heading}deg)`;
+            // SKÁLÁZÁS: Ha a villamos kimegy a szélre, vedd kisebbre a 0.1-et (pl. 0.05)
+            const scale = 0.1; 
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+
+            // Roblox X = Web bal/jobb, Roblox Z = Web fel/le
+            tramElements[data.id].style.left = (centerX + data.x * scale) + 'px';
+            tramElements[data.id].style.top = (centerY + data.z * scale) + 'px';
+            tramElements[data.id].style.transform = `translate(-50%, -50%) rotate(${data.heading}deg)`;
             
             updateSidebar(data);
         });
 
         function updateSidebar(data) {
-            list.innerHTML = `<b>Járatszám:</b> ${data.line}<br><b>Vezető:</b> ${data.driver}<br><b>Sebesség:</b> ${data.speed} km/h`;
+            activeData.innerHTML = `
+                <div class="stat-row">Vezető: <span style="color:white">${data.driver}</span></div>
+                <div class="stat-row">Sebesség: <span style="color:#ffcc00">${data.speed} km/h</span></div>
+                <div class="stat-row">Pozíció: <span class="stat-val">${data.x}, ${data.z}</span></div>
+            `;
         }
     </script>
 </body>
