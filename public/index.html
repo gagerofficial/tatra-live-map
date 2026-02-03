@@ -3,89 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PROJECT GOB | Systems Portal</title>
+    <title>PROJECT GOB | Official Portal</title>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <style>
         :root {
-            --accent: #a855f7; /* Brutál lila */
-            --accent-hover: #c084fc;
+            --accent: #a855f7;
+            --accent-glow: rgba(168, 85, 247, 0.4);
             --bg-deep: #09090b;
-            --bg-panel: #18181b;
-            --bg-card: #27272a;
-            --text-main: #f4f4f5;
+            --bg-panel: #121216;
+            --bg-card: #1c1c21;
+            --text-main: #fafafa;
             --text-dim: #a1a1aa;
-            --danger: #ef4444;
+            --border: #27272a;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }
         body { 
-            font-family: 'Inter', 'Segoe UI', sans-serif; 
+            font-family: 'Inter', sans-serif; 
             background-color: var(--bg-deep); 
             color: var(--text-main);
-            overflow-x: hidden;
+            line-height: 1.6;
         }
 
         /* --- NAVIGÁCIÓ --- */
         nav {
-            height: 70px;
-            background: rgba(9, 9, 11, 0.8);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--bg-card);
+            height: 75px; background: rgba(9, 9, 11, 0.9); backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--border);
             display: flex; align-items: center; justify-content: space-between;
-            padding: 0 50px; position: sticky; top: 0; z-index: 1000;
+            padding: 0 8%; position: sticky; top: 0; z-index: 1000;
         }
-
-        .nav-logo { font-weight: 800; font-size: 22px; letter-spacing: 2px; color: var(--accent); }
-        .nav-links { display: flex; gap: 30px; }
-        .nav-links a { 
-            text-decoration: none; color: var(--text-dim); font-size: 14px; 
-            font-weight: 500; transition: 0.3s; cursor: pointer;
-        }
+        .nav-logo { font-weight: 900; font-size: 24px; color: var(--accent); letter-spacing: 1px; }
+        .nav-links { display: flex; gap: 25px; }
+        .nav-links a { text-decoration: none; color: var(--text-dim); font-size: 14px; font-weight: 500; cursor: pointer; transition: 0.3s; }
         .nav-links a:hover { color: var(--accent); }
-        .lang-switch {
-            background: var(--bg-card); border: none; color: white;
-            padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;
-        }
+        .status-badge { background: #10b98122; color: #10b981; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid #10b98144; }
 
-        /* --- SECTIONS --- */
-        section { padding: 80px 50px; display: none; min-height: calc(100vh - 70px); }
-        section.active { display: block; animation: fadeIn 0.5s ease; }
+        /* --- SZEKCIÓK --- */
+        section { padding: 100px 8%; display: none; min-height: 90vh; }
+        section.active { display: block; animation: slideIn 0.4s ease-out; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* --- FŐOLDAL --- */
+        .hero { display: flex; align-items: center; justify-content: space-between; gap: 40px; margin-bottom: 80px; }
+        .hero-text { flex: 1; }
+        .hero-text h1 { font-size: clamp(40px, 5vw, 72px); line-height: 1.1; margin-bottom: 25px; }
+        .hero-text span { color: var(--accent); }
+        .btn-primary { background: var(--accent); color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block; transition: 0.3s; border: none; cursor: pointer; }
+        .btn-primary:hover { background: var(--accent-hover); box-shadow: 0 0 20px var(--accent-glow); }
 
-        /* --- FŐOLDAL (HOME) --- */
-        .hero { text-align: center; max-width: 800px; margin: 0 auto; padding-top: 50px; }
-        .hero h1 { font-size: 64px; margin-bottom: 20px; background: linear-gradient(to right, #fff, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .hero p { color: var(--text-dim); font-size: 18px; line-height: 1.6; }
+        .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-top: 50px; }
+        .feature-card { background: var(--bg-panel); padding: 30px; border-radius: 16px; border: 1px solid var(--border); }
+        .feature-card h3 { color: var(--accent); margin-bottom: 15px; }
 
-        /* --- RADAR (MAP) --- */
-        #radar-container { display: flex; gap: 20px; height: 600px; }
-        #map-area { 
-            flex: 2; background: var(--bg-panel); border-radius: 12px; border: 1px solid var(--bg-card);
-            position: relative; overflow: hidden;
-        }
-        #telemetry { flex: 1; background: var(--bg-panel); border-radius: 12px; padding: 25px; border: 1px solid var(--bg-card); }
+        /* --- LIVE RADAR --- */
+        #radar-container { display: flex; gap: 20px; height: 650px; }
+        #map-area { flex: 3; background: #0c0c0e; border-radius: 16px; border: 1px solid var(--border); position: relative; overflow: hidden; }
+        #telemetry { flex: 1; background: var(--bg-panel); border-radius: 16px; padding: 30px; border: 1px solid var(--border); }
 
-        .tram-icon {
-            position: absolute; width: 14px; height: 35px; background: var(--accent);
-            border: 2px solid #000; border-radius: 2px; cursor: pointer;
-            box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
-            transition: left 0.9s linear, top 0.9s linear;
-        }
+        /* --- JÁRMŰPARK --- */
+        .fleet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
+        .fleet-card { background: var(--bg-panel); border-radius: 16px; border: 1px solid var(--border); overflow: hidden; transition: 0.3s; }
+        .fleet-card:hover { transform: translateY(-8px); border-color: var(--accent); }
+        .fleet-img { width: 100%; height: 200px; background: #1a1a1f; display: flex; align-items: center; justify-content: center; color: #333; font-weight: bold; }
+        .fleet-info { padding: 25px; }
 
-        /* --- JÁRMŰPARK (FLEET) --- */
-        .fleet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .fleet-card { background: var(--bg-panel); border-radius: 12px; overflow: hidden; border: 1px solid var(--bg-card); transition: 0.3s; }
-        .fleet-card:hover { border-color: var(--accent); transform: translateY(-5px); }
-        .fleet-img { width: 100%; height: 160px; background: #333; }
-        .fleet-info { padding: 20px; }
+        /* --- LÁBLÉC --- */
+        footer { padding: 60px 8%; background: #050507; border-top: 1px solid var(--border); color: var(--text-dim); }
+        .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 40px; margin-bottom: 40px; }
+        .footer-logo { color: var(--text-main); font-weight: 800; font-size: 20px; margin-bottom: 15px; }
+        .footer-bottom { border-top: 1px solid #1a1a1f; padding-top: 30px; font-size: 13px; text-align: center; }
 
-        /* --- CSAPAT (TEAM) --- */
-        .team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 40px; text-align: center; }
-        .member-avatar { width: 120px; height: 120px; border-radius: 50%; background: var(--accent); margin: 0 auto 20px; border: 4px solid var(--bg-card); }
+        /* --- NYELV VÁLASZTÓ --- */
+        .lang-btn { background: transparent; border: 1px solid var(--border); color: var(--text-main); padding: 6px 12px; border-radius: 6px; cursor: pointer; margin-left: 20px; }
 
-        .data-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 4px; }
-        .data-value { font-size: 18px; font-weight: bold; margin-bottom: 15px; }
+        .tram-icon { position: absolute; width: 15px; height: 40px; background: var(--accent); border: 2px solid black; border-radius: 2px; cursor: pointer; box-shadow: 0 0 15px var(--accent-glow); }
     </style>
 </head>
 <body>
@@ -93,96 +84,125 @@
 <nav>
     <div class="nav-logo">PROJECT GOB</div>
     <div class="nav-links">
-        <a onclick="showSection('home')" data-hu="FŐOLDAL" data-en="HOME">FŐOLDAL</a>
-        <a onclick="showSection('radar')" data-hu="ÉLŐ RADAR" data-en="LIVE RADAR">ÉLŐ RADAR</a>
-        <a onclick="showSection('fleet')" data-hu="JÁRMŰPARK" data-en="FLEET">JÁRMŰPARK</a>
-        <a onclick="showSection('team')" data-hu="CSAPATUNK" data-en="OUR TEAM">CSAPATUNK</a>
+        <a onclick="showSection('home')" data-hu="Főoldal" data-en="Home">Főoldal</a>
+        <a onclick="showSection('radar')" data-hu="Élő Radar" data-en="Live Radar">Élő Radar</a>
+        <a onclick="showSection('fleet')" data-hu="Járművek" data-en="Fleet">Járművek</a>
+        <a onclick="showSection('team')" data-hu="Csapat" data-en="Team">Csapat</a>
     </div>
-    <button class="lang-switch" onclick="toggleLanguage()">EN / HU</button>
+    <div style="display: flex; align-items: center;">
+        <span class="status-badge">ONLINE</span>
+        <button class="lang-btn" onclick="toggleLanguage()">EN / HU</button>
+    </div>
 </nav>
 
 <section id="home" class="active">
     <div class="hero">
-        <h1 data-hu="A közlekedés jövője" data-en="Future of Transit">A közlekedés jövője</h1>
-        <p data-hu="Üdvözöljük a Project GOB hivatalos oldalán. Budapest legmodernebb szimulációs hálózata, ahol a precizitás és a technológia találkozik." 
-           data-en="Welcome to the official Project GOB portal. Budapest's most advanced simulation network, where precision meets technology.">
-           Üdvözöljük a Project GOB hivatalos oldalán. Budapest legmodernebb szimulációs hálózata.
-        </p>
+        <div class="hero-text">
+            <h1 data-hu="Irányítsd <span>Budapest</span> közlekedését" data-en="Control the transit of <span>Budapest</span>">Irányítsd <span>Budapest</span> közlekedését</h1>
+            <p style="font-size: 20px; margin-bottom: 35px;" data-hu="A Project GOB a legmélyebb budapesti tömegközlekedési szimuláció Robloxon. Éld át a járművezetők és a diszpécserek mindennapjait egy élettel teli hálózatban." data-en="Project GOB is the deepest Budapest transit simulation on Roblox. Experience the daily life of drivers and dispatchers in a living network.">
+                A Project GOB a legmélyebb budapesti tömegközlekedési szimuláció Robloxon.
+            </p>
+            <button class="btn-primary" onclick="showSection('radar')" data-hu="Radar megnyitása" data-en="Open Radar">Radar megnyitása</button>
+        </div>
+    </div>
+
+    <div class="features">
+        <div class="feature-card">
+            <h3 data-hu="Élő Telemetria" data-en="Live Telemetry">Élő Telemetria</h3>
+            <p data-hu="Kövesd nyomon minden egyes jármű helyzetét, sebességét és menetrendi pontosságát valós időben a webes felületünkön." data-en="Track every vehicle's position, speed, and schedule accuracy in real-time through our web interface.">Kövesd nyomon minden egyes jármű helyzetét valós időben.</p>
+        </div>
+        <div class="feature-card">
+            <h3 data-hu="Reális Menetrend" data-en="Realistic Schedule">Reális Menetrend</h3>
+            <p data-hu="A jutalmazási rendszerünk a pontosságon alapul. Ne siess, de ne is késs - a diszpécserek mindent látnak!" data-en="Our reward system is based on punctuality. Don't rush, don't be late - dispatchers see everything!">A jutalmazási rendszerünk a pontosságon alapul.</p>
+        </div>
+        <div class="feature-card">
+            <h3 data-hu="Bővülő Hálózat" data-en="Expanding Network">Bővülő Hálózat</h3>
+            <p data-hu="Folyamatosan bővülő vonalhálózat és járműpark várakozik rád, a klasszikus Tatráktól a modern autóbuszokig." data-en="A constantly expanding route network and fleet await you, from classic Tatras to modern buses.">Folyamatosan bővülő vonalhálózat és járműpark.</p>
+        </div>
     </div>
 </section>
 
 <section id="radar">
     <div id="radar-container">
         <div id="map-area">
-            <div id="map-grid" style="width: 100%; height: 100%; background-image: radial-gradient(var(--bg-card) 1px, transparent 1px); background-size: 30px 30px;"></div>
+            <div style="position: absolute; color: #222; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 150px; font-weight: 900; pointer-events: none; opacity: 0.1;">GOB</div>
         </div>
         <div id="telemetry">
-            <h3 id="tel-title" style="margin-bottom: 25px; color: var(--accent);">TELEMETRY DATA</h3>
+            <h2 style="color: var(--accent); margin-bottom: 20px;" data-hu="Adatlap" data-en="Data Sheet">Adatlap</h2>
             <div id="telemetry-content">
-                <p style="color: var(--text-dim);" data-hu="Válassz egy járművet az adatokhoz." data-en="Select a vehicle for live data.">Válassz egy járművet az adatokhoz.</p>
+                <p style="color: var(--text-dim);" data-hu="Nincs kiválasztott jármű." data-en="No vehicle selected.">Nincs kiválasztott jármű.</p>
             </div>
         </div>
     </div>
 </section>
 
 <section id="fleet">
-    <h2 style="margin-bottom: 40px;" data-hu="Aktuális flotta" data-en="Current Fleet">Aktuális flotta</h2>
+    <h1 style="margin-bottom: 50px;">Fleet <span style="color: var(--accent);">Inventory</span></h1>
     <div class="fleet-grid">
         <div class="fleet-card">
-            <div class="fleet-img" style="background: url('https://img.youtube.com/vi/your-video-id/maxresdefault.jpg') center/cover;"></div>
+            <div class="fleet-img">TATRA T5C5</div>
             <div class="fleet-info">
                 <h3>Tatra T5C5</h3>
-                <p style="color: var(--text-dim); font-size: 14px;">Modernizált budapesti villamos.</p>
+                <p data-hu="Ikonikus budapesti villamos, modernizált hajtásrendszerrel." data-en="Iconic Budapest tram with modernized propulsion.">Ikonikus budapesti villamos.</p>
             </div>
         </div>
-        </div>
+    </div>
 </section>
 
-<section id="team">
-    <h2 style="margin-bottom: 40px;" data-hu="A GOB Fejlesztői" data-en="GOB Developers">A GOB Fejlesztői</h2>
-    <div class="team-grid">
-        <div class="team-member">
-            <div class="member-avatar"></div>
-            <h3>Vezető Fejlesztő</h3>
-            <p style="color: var(--accent);">Project Lead</p>
+<footer>
+    <div class="footer-grid">
+        <div>
+            <div class="footer-logo">PROJECT GOB</div>
+            <p data-hu="Budapest szimuláció a legmagasabb szinten." data-en="Budapest simulation at the highest level.">Budapest szimuláció a legmagasabb szinten.</p>
         </div>
+        <div>
+            <h4 style="color: white; margin-bottom: 20px;">Links</h4>
+            <p><a onclick="showSection('home')" style="color: var(--text-dim); text-decoration: none; cursor: pointer;">Home</a></p>
+            <p><a href="https://roblox.com" style="color: var(--text-dim); text-decoration: none;">Roblox Group</a></p>
         </div>
-</section>
+        <div>
+            <h4 style="color: white; margin-bottom: 20px;">Status</h4>
+            <p>Main Server: <span style="color: #10b981;">Operational</span></p>
+            <p>Web API: <span style="color: #10b981;">Stable</span></p>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        &copy; 2026 Project GOB Development Team. Not affiliated with BKK or BKV.
+    </div>
+</footer>
 
 <script>
     const socket = io();
     const vehicles = {};
     let currentLang = 'hu';
 
-    // --- NYELV VÁLTÓ ---
     function toggleLanguage() {
         currentLang = currentLang === 'hu' ? 'en' : 'hu';
         document.querySelectorAll('[data-hu]').forEach(el => {
             el.innerText = el.getAttribute('data-' + currentLang);
+            if(el.getAttribute('data-hu-span')) el.innerHTML = el.getAttribute('data-' + currentLang);
         });
     }
 
-    // --- SZEKCIÓ VÁLTÓ ---
     function showSection(id) {
         document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
+        window.scrollTo(0,0);
     }
 
-    // --- RADAR LOGIKA ---
     socket.on('tramUpdate', (data) => {
         if (!vehicles[data.id]) {
             const el = document.createElement('div');
             el.className = 'tram-icon';
-            el.onclick = () => updateTelemetry(data.id);
+            el.onclick = () => updateStats(data.id);
             document.getElementById('map-area').appendChild(el);
             vehicles[data.id] = { el: el };
         }
-        
         const v = vehicles[data.id];
         v.data = data;
 
-        const scale = 0.1;
-        const cX = window.innerWidth / 3; // Megközelítő közép
+        const scale = 0.08;
+        const cX = window.innerWidth / 3;
         const cY = 300;
 
         v.el.style.left = (cX + data.x * scale) + 'px';
@@ -190,19 +210,26 @@
         v.el.style.transform = `translate(-50%, -50%) rotate(${data.heading}deg)`;
     });
 
-    function updateTelemetry(id) {
+    function updateStats(id) {
         const d = vehicles[id].data;
-        const status = d.delay > 30 ? 'DELAYED' : 'ON TIME';
-        const color = d.delay > 30 ? '#ef4444' : '#22c55e';
-
         document.getElementById('telemetry-content').innerHTML = `
-            <div class="data-label">Callsign</div><div class="data-value" style="color:var(--accent)">LINE ${d.line}</div>
-            <div class="data-label">Driver</div><div class="data-value">${d.driver}</div>
-            <div class="data-label">Velocity</div><div class="data-value">${d.speed} KM/H</div>
-            <div class="data-label">Status</div><div class="data-value" style="color:${color}">${status}</div>
+            <div style="margin-bottom: 20px; border-left: 4px solid var(--accent); padding-left: 15px;">
+                <p style="font-size: 12px; color: #888;">IDENTIFICATION</p>
+                <p style="font-size: 22px; font-weight: bold;">LINE ${d.line}</p>
+                <p style="color: var(--accent);">${d.driver}</p>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <p style="font-size: 11px; color: #888;">SPEED</p>
+                    <p style="font-weight: bold;">${d.speed} km/h</p>
+                </div>
+                <div>
+                    <p style="font-size: 11px; color: #888;">STATUS</p>
+                    <p style="color: ${d.delay > 30 ? '#ef4444' : '#10b981'}; font-weight: bold;">${d.delay > 30 ? 'DELAY' : 'ON TIME'}</p>
+                </div>
+            </div>
         `;
     }
 </script>
-
 </body>
 </html>
