@@ -3,237 +3,205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project GOB | Integrated Network Dispatch</title>
+    <title>PROJECT GOB | Systems Portal</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <style>
         :root {
-            --gob-yellow: #ffcc00;
-            --gob-dark: #121212;
-            --gob-panel: rgba(30, 30, 30, 0.95);
-            --br-white: #ffffff;
-            --track-color: #333;
+            --accent: #a855f7; /* Brutál lila */
+            --accent-hover: #c084fc;
+            --bg-deep: #09090b;
+            --bg-panel: #18181b;
+            --bg-card: #27272a;
+            --text-main: #f4f4f5;
+            --text-dim: #a1a1aa;
+            --danger: #ef4444;
         }
 
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
-            margin: 0; background: var(--gob-dark); color: white; 
-            font-family: 'Gill Sans', 'Gill Sans MT', 'Trebuchet MS', sans-serif; 
-            overflow: hidden; 
+            font-family: 'Inter', 'Segoe UI', sans-serif; 
+            background-color: var(--bg-deep); 
+            color: var(--text-main);
+            overflow-x: hidden;
         }
 
-        /* --- NAVIGÁCIÓ (BR STÍLUS) --- */
+        /* --- NAVIGÁCIÓ --- */
         nav {
-            height: 65px; background: var(--br-white); color: black;
-            display: flex; align-items: center; padding: 0 30px;
-            border-bottom: 6px solid var(--gob-yellow);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.6); z-index: 1000; position: relative;
+            height: 70px;
+            background: rgba(9, 9, 11, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--bg-card);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 50px; position: sticky; top: 0; z-index: 1000;
         }
 
-        .logo-text { font-weight: 900; font-size: 26px; letter-spacing: -1px; }
-        .sub-text { 
-            margin-left: 15px; font-weight: 400; border-left: 2px solid #ddd; 
-            padding-left: 15px; text-transform: uppercase; font-size: 14px; color: #444;
+        .nav-logo { font-weight: 800; font-size: 22px; letter-spacing: 2px; color: var(--accent); }
+        .nav-links { display: flex; gap: 30px; }
+        .nav-links a { 
+            text-decoration: none; color: var(--text-dim); font-size: 14px; 
+            font-weight: 500; transition: 0.3s; cursor: pointer;
+        }
+        .nav-links a:hover { color: var(--accent); }
+        .lang-switch {
+            background: var(--bg-card); border: none; color: white;
+            padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;
         }
 
-        /* --- TÉRKÉP --- */
-        #map-container {
-            width: 100vw; height: calc(100vh - 71px);
-            position: relative; overflow: hidden; background: #181818;
+        /* --- SECTIONS --- */
+        section { padding: 80px 50px; display: none; min-height: calc(100vh - 70px); }
+        section.active { display: block; animation: fadeIn 0.5s ease; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- FŐOLDAL (HOME) --- */
+        .hero { text-align: center; max-width: 800px; margin: 0 auto; padding-top: 50px; }
+        .hero h1 { font-size: 64px; margin-bottom: 20px; background: linear-gradient(to right, #fff, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero p { color: var(--text-dim); font-size: 18px; line-height: 1.6; }
+
+        /* --- RADAR (MAP) --- */
+        #radar-container { display: flex; gap: 20px; height: 600px; }
+        #map-area { 
+            flex: 2; background: var(--bg-panel); border-radius: 12px; border: 1px solid var(--bg-card);
+            position: relative; overflow: hidden;
+        }
+        #telemetry { flex: 1; background: var(--bg-panel); border-radius: 12px; padding: 25px; border: 1px solid var(--bg-card); }
+
+        .tram-icon {
+            position: absolute; width: 14px; height: 35px; background: var(--accent);
+            border: 2px solid #000; border-radius: 2px; cursor: pointer;
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
+            transition: left 0.9s linear, top 0.9s linear;
         }
 
-        #map { 
-            width: 5000px; height: 5000px; position: absolute; 
-            background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
-            transition: transform 0.1s ease-out;
-        }
+        /* --- JÁRMŰPARK (FLEET) --- */
+        .fleet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .fleet-card { background: var(--bg-panel); border-radius: 12px; overflow: hidden; border: 1px solid var(--bg-card); transition: 0.3s; }
+        .fleet-card:hover { border-color: var(--accent); transform: translateY(-5px); }
+        .fleet-img { width: 100%; height: 160px; background: #333; }
+        .fleet-info { padding: 20px; }
 
-        /* --- JÁRMŰ ÉS MEGÁLLÓ --- */
-        .tram { 
-            position: absolute; width: 16px; height: 40px; 
-            background: var(--gob-yellow); border: 2px solid black;
-            cursor: pointer; z-index: 100; border-radius: 2px;
-            transition: left 0.9s linear, top 0.9s linear, transform 0.9s linear;
-        }
-        .tram.selected { box-shadow: 0 0 0 3px white, 0 0 20px var(--gob-yellow); }
+        /* --- CSAPAT (TEAM) --- */
+        .team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 40px; text-align: center; }
+        .member-avatar { width: 120px; height: 120px; border-radius: 50%; background: var(--accent); margin: 0 auto 20px; border: 4px solid var(--bg-card); }
 
-        .stop-dot {
-            position: absolute; width: 10px; height: 10px;
-            background: #fff; border: 2px solid #000; border-radius: 50%;
-            z-index: 50; transform: translate(-50%, -50%);
-        }
-        .stop-label {
-            position: absolute; font-size: 10px; color: #888;
-            transform: translate(12px, -5px); white-space: nowrap; pointer-events: none;
-        }
-
-        svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
-        line { stroke: var(--track-color); stroke-width: 3; stroke-linecap: round; }
-
-        /* --- OLDALSÁV --- */
-        #sidebar { 
-            position: absolute; top: 20px; left: 20px; bottom: 20px;
-            width: 340px; background: var(--gob-panel);
-            border: 1px solid rgba(255,255,255,0.1); border-radius: 4px;
-            display: flex; flex-direction: column; backdrop-filter: blur(10px);
-            z-index: 500;
-        }
-
-        .panel-header { background: #252525; color: var(--gob-yellow); padding: 12px 15px; font-weight: bold; font-size: 13px; letter-spacing: 1px; }
-        .stats { padding: 20px; flex-grow: 1; }
-        .data-card { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 4px; margin-bottom: 10px; }
-        .label { font-size: 10px; color: #aaa; text-transform: uppercase; display: block; }
-        .value { font-size: 20px; font-weight: bold; color: white; }
-
-        .status-pill {
-            display: inline-block; padding: 4px 10px; border-radius: 2px;
-            font-size: 12px; font-weight: bold; margin-top: 10px;
-        }
-
-        #fleet-list { height: 180px; overflow-y: auto; background: rgba(0,0,0,0.4); }
-        .fleet-item { 
-            padding: 10px 15px; border-bottom: 1px solid #333; cursor: pointer; 
-            display: flex; justify-content: space-between; font-size: 14px;
-        }
-        .fleet-item:hover { background: rgba(255,204,0,0.1); }
+        .data-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 4px; }
+        .data-value { font-size: 18px; font-weight: bold; margin-bottom: 15px; }
     </style>
 </head>
 <body>
 
 <nav>
-    <div class="logo-text">PROJECT GOB</div>
-    <div class="sub-text">Budapest Network Control | Strategic Operations</div>
+    <div class="nav-logo">PROJECT GOB</div>
+    <div class="nav-links">
+        <a onclick="showSection('home')" data-hu="FŐOLDAL" data-en="HOME">FŐOLDAL</a>
+        <a onclick="showSection('radar')" data-hu="ÉLŐ RADAR" data-en="LIVE RADAR">ÉLŐ RADAR</a>
+        <a onclick="showSection('fleet')" data-hu="JÁRMŰPARK" data-en="FLEET">JÁRMŰPARK</a>
+        <a onclick="showSection('team')" data-hu="CSAPATUNK" data-en="OUR TEAM">CSAPATUNK</a>
+    </div>
+    <button class="lang-switch" onclick="toggleLanguage()">EN / HU</button>
 </nav>
 
-<div id="map-container">
-    <div id="map">
-        <svg id="tracks-layer"></svg>
+<section id="home" class="active">
+    <div class="hero">
+        <h1 data-hu="A közlekedés jövője" data-en="Future of Transit">A közlekedés jövője</h1>
+        <p data-hu="Üdvözöljük a Project GOB hivatalos oldalán. Budapest legmodernebb szimulációs hálózata, ahol a precizitás és a technológia találkozik." 
+           data-en="Welcome to the official Project GOB portal. Budapest's most advanced simulation network, where precision meets technology.">
+           Üdvözöljük a Project GOB hivatalos oldalán. Budapest legmodernebb szimulációs hálózata.
+        </p>
     </div>
-</div>
+</section>
 
-<div id="sidebar">
-    <div class="panel-header">TELEMETRY DATA</div>
-    <div class="stats" id="stats-panel">
-        <div style="text-align: center; padding-top: 50px; color: #555;">
-            SELECT VEHICLE FOR LIVE DATA
+<section id="radar">
+    <div id="radar-container">
+        <div id="map-area">
+            <div id="map-grid" style="width: 100%; height: 100%; background-image: radial-gradient(var(--bg-card) 1px, transparent 1px); background-size: 30px 30px;"></div>
+        </div>
+        <div id="telemetry">
+            <h3 id="tel-title" style="margin-bottom: 25px; color: var(--accent);">TELEMETRY DATA</h3>
+            <div id="telemetry-content">
+                <p style="color: var(--text-dim);" data-hu="Válassz egy járművet az adatokhoz." data-en="Select a vehicle for live data.">Válassz egy járművet az adatokhoz.</p>
+            </div>
         </div>
     </div>
-    
-    <div class="panel-header">ACTIVE NETWORK UNITS</div>
-    <div id="fleet-list"></div>
-</div>
+</section>
 
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<section id="fleet">
+    <h2 style="margin-bottom: 40px;" data-hu="Aktuális flotta" data-en="Current Fleet">Aktuális flotta</h2>
+    <div class="fleet-grid">
+        <div class="fleet-card">
+            <div class="fleet-img" style="background: url('https://img.youtube.com/vi/your-video-id/maxresdefault.jpg') center/cover;"></div>
+            <div class="fleet-info">
+                <h3>Tatra T5C5</h3>
+                <p style="color: var(--text-dim); font-size: 14px;">Modernizált budapesti villamos.</p>
+            </div>
+        </div>
+        </div>
+</section>
+
+<section id="team">
+    <h2 style="margin-bottom: 40px;" data-hu="A GOB Fejlesztői" data-en="GOB Developers">A GOB Fejlesztői</h2>
+    <div class="team-grid">
+        <div class="team-member">
+            <div class="member-avatar"></div>
+            <h3>Vezető Fejlesztő</h3>
+            <p style="color: var(--accent);">Project Lead</p>
+        </div>
+        </div>
+</section>
+
 <script>
     const socket = io();
-    const map = document.getElementById('map');
-    const svgLayer = document.getElementById('tracks-layer');
     const vehicles = {};
-    let selectedId = null;
+    let currentLang = 'hu';
 
-    // --- MEGÁLLÓK ÉS PÁLYA ADATOK ---
-    // Ide írd majd be a valódi koordinátáidat!
-    const stopsData = {
-        "1": [
-            { name: "teststop1", x: 1113, z: -993 },
-            { name: "teststop2", x: 1123, z: -1310 },
-            { name: "teststop3", x: 1143, z: -1868 }
-        ]
-    };
-
-    const scale = 0.08;
-    const cX = 2500; // Térkép közepe (5000/2)
-    const cY = 2500;
-
-    // Megállók és vágányok inicializálása
-    function initNetwork() {
-        Object.keys(stopsData).forEach(lineId => {
-            const stops = stopsData[lineId];
-            for (let i = 0; i < stops.length; i++) {
-                // Pötty létrehozása
-                const s = stops[i];
-                const dot = document.createElement('div');
-                dot.className = 'stop-dot';
-                dot.style.left = (cX + s.x * scale) + 'px';
-                dot.style.top = (cY + s.z * scale) + 'px';
-                dot.innerHTML = `<div class="stop-label">${s.name}</div>`;
-                map.appendChild(dot);
-
-                // Vonal húzása a következő megállóig
-                if (stops[i+1]) {
-                    const s2 = stops[i+1];
-                    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                    line.setAttribute("x1", cX + s.x * scale);
-                    line.setAttribute("y1", cY + s.z * scale);
-                    line.setAttribute("x2", cX + s2.x * scale);
-                    line.setAttribute("y2", cY + s2.z * scale);
-                    svgLayer.appendChild(line);
-                }
-            }
+    // --- NYELV VÁLTÓ ---
+    function toggleLanguage() {
+        currentLang = currentLang === 'hu' ? 'en' : 'hu';
+        document.querySelectorAll('[data-hu]').forEach(el => {
+            el.innerText = el.getAttribute('data-' + currentLang);
         });
     }
 
-    // --- SOCKET KOMMUNIKÁCIÓ ---
+    // --- SZEKCIÓ VÁLTÓ ---
+    function showSection(id) {
+        document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    // --- RADAR LOGIKA ---
     socket.on('tramUpdate', (data) => {
         if (!vehicles[data.id]) {
             const el = document.createElement('div');
-            el.className = 'tram';
-            el.onclick = () => selectVehicle(data.id);
-            map.appendChild(el);
+            el.className = 'tram-icon';
+            el.onclick = () => updateTelemetry(data.id);
+            document.getElementById('map-area').appendChild(el);
             vehicles[data.id] = { el: el };
         }
-
+        
         const v = vehicles[data.id];
         v.data = data;
+
+        const scale = 0.1;
+        const cX = window.innerWidth / 3; // Megközelítő közép
+        const cY = 300;
 
         v.el.style.left = (cX + data.x * scale) + 'px';
         v.el.style.top = (cY + data.z * scale) + 'px';
         v.el.style.transform = `translate(-50%, -50%) rotate(${data.heading}deg)`;
-
-        if (selectedId === data.id) {
-            updateStats();
-            // Kamera követés (opcionális: ha akarod, hogy a térkép mozogjon a kijelölt után)
-            const mapC = document.getElementById('map-container');
-            map.style.transform = `translate(${- (cX + data.x * scale) + mapC.offsetWidth/2}px, ${- (cY + data.z * scale) + mapC.offsetHeight/2}px)`;
-        }
-        updateFleetList();
     });
 
-    function selectVehicle(id) {
-        if (selectedId && vehicles[selectedId]) vehicles[selectedId].el.classList.remove('selected');
-        selectedId = id;
-        vehicles[id].el.classList.add('selected');
-        updateStats();
-    }
+    function updateTelemetry(id) {
+        const d = vehicles[id].data;
+        const status = d.delay > 30 ? 'DELAYED' : 'ON TIME';
+        const color = d.delay > 30 ? '#ef4444' : '#22c55e';
 
-    function updateStats() {
-        const d = vehicles[selectedId].data;
-        const delayStatus = d.delay > 30 ? 
-            { t: `DELAY: ${Math.floor(d.delay/60)}m ${d.delay%60}s`, c: '#ff4444' } : 
-            { t: "ON TIME", c: "#00ff00" };
-
-        document.getElementById('stats-panel').innerHTML = `
-            <div class="data-card"><span class="label">Callsign</span><span class="value">LINE ${d.line}</span></div>
-            <div class="data-card"><span class="label">Operator</span><span class="value">${d.driver}</span></div>
-            <div class="data-card"><span class="label">Velocity</span><span class="value">${d.speed} KM/H</span></div>
-            <div class="data-card"><span class="label">Next Terminal</span><span class="value">${d.nextStop}</span></div>
-            <div class="status-pill" style="background: ${delayStatus.c}22; color: ${delayStatus.c}">${delayStatus.t}</div>
+        document.getElementById('telemetry-content').innerHTML = `
+            <div class="data-label">Callsign</div><div class="data-value" style="color:var(--accent)">LINE ${d.line}</div>
+            <div class="data-label">Driver</div><div class="data-value">${d.driver}</div>
+            <div class="data-label">Velocity</div><div class="data-value">${d.speed} KM/H</div>
+            <div class="data-label">Status</div><div class="data-value" style="color:${color}">${status}</div>
         `;
     }
-
-    function updateFleetList() {
-        const list = document.getElementById('fleet-list');
-        list.innerHTML = "";
-        Object.keys(vehicles).forEach(id => {
-            const d = vehicles[id].data;
-            const item = document.createElement('div');
-            item.className = 'fleet-item';
-            item.style.borderLeft = (id === selectedId) ? "4px solid var(--gob-yellow)" : "none";
-            item.innerHTML = `<span>Line ${d.line}</span><span>${d.driver}</span>`;
-            item.onclick = () => selectVehicle(id);
-            list.appendChild(item);
-        });
-    }
-
-    initNetwork();
 </script>
 
 </body>
