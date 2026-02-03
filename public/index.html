@@ -2,203 +2,153 @@
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BKK | Diszpécser Központ (Tatra T5C5)</title>
+    <title>Project GOB | Integrated Transit Control</title>
     <style>
         :root {
-            --accent: #ffcc00;
-            --bg: #0b0e11;
-            --panel: rgba(23, 27, 34, 0.9);
-            --text: #ffffff;
-            --subtext: #a0a6b1;
-            --danger: #ff4757;
-            --success: #2ed573;
+            --gob-yellow: #ffcc00;
+            --gob-dark: #121212;
+            --gob-panel: #1e1e1e;
+            --br-blue: #003399; /* British Rail Blue kiegészítésnek */
         }
 
         body { 
-            margin: 0; background: var(--bg); color: var(--text); 
-            font-family: 'Inter', 'Segoe UI', sans-serif; overflow: hidden; 
+            margin: 0; background: var(--gob-dark); color: white; 
+            font-family: 'Gill Sans', 'Gill Sans MT', Calibri, sans-serif; 
+            overflow: hidden; 
         }
 
-        /* Navigációs sáv */
+        /* Felső Navigáció - British Rail stílus */
         nav {
-            position: fixed; top: 0; width: 100%; height: 60px;
-            background: #151921; border-bottom: 1px solid #2d3436;
-            display: flex; align-items: center; padding: 0 25px; z-index: 1000;
+            height: 60px; background: white; color: black;
+            display: flex; align-items: center; padding: 0 30px;
+            border-bottom: 5px solid var(--gob-yellow);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 1000; position: relative;
         }
+
+        .logo-text { font-weight: 900; font-size: 24px; letter-spacing: -1px; }
+        .sub-text { margin-left: 15px; font-weight: 300; border-left: 1px solid #ccc; padding-left: 15px; text-transform: uppercase; font-size: 14px; }
 
         #map { 
-            width: 100vw; height: 100vh; position: relative; 
-            background-color: #0f1218;
-            background-image: 
-                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-            background-size: 100px 100px;
-            transition: transform 0.5s ease;
+            width: 100vw; height: calc(100vh - 65px); position: relative; 
+            background: #1a1a1a;
+            background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
         }
 
-        /* Villamos ikon */
+        /* Jármű ikonok */
         .tram { 
-            position: absolute; width: 22px; height: 50px; 
-            background: var(--accent); border: 2px solid #000;
-            cursor: pointer; transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 6px; z-index: 10;
+            position: absolute; width: 15px; height: 35px; 
+            background: var(--gob-yellow); border: 2px solid black;
+            cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+            z-index: 10;
         }
+        .tram.selected { box-shadow: 0 0 0 3px white, 0 0 15px var(--gob-yellow); z-index: 100; }
 
-        .tram.selected {
-            box-shadow: 0 0 25px var(--accent);
-            border-color: white;
-            z-index: 20;
-        }
-
-        .tram:hover { transform: scale(1.1) translate(-50%, -50%); }
-
-        /* Oldalsáv */
+        /* Oldalsáv - "Glass" effekt */
         #sidebar { 
-            position: fixed; top: 80px; left: 20px; bottom: 20px;
-            background: var(--panel); width: 320px; border-radius: 16px; 
-            border: 1px solid rgba(255,255,255,0.1); 
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-            z-index: 100; backdrop-filter: blur(15px);
-            display: flex; flex-direction: column;
+            position: absolute; top: 80px; left: 20px; bottom: 20px;
+            width: 320px; background: rgba(30, 30, 30, 0.9);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 4px;
+            display: flex; flex-direction: column; backdrop-filter: blur(10px);
         }
 
-        .stat-group { padding: 20px; overflow-y: auto; flex-grow: 1; }
+        .panel-header { background: var(--gob-yellow); color: black; padding: 10px 15px; font-weight: bold; font-size: 14px; }
+        .stats { padding: 20px; flex-grow: 1; }
+        .data-row { margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        .label { font-size: 11px; color: #888; text-transform: uppercase; }
+        .value { font-size: 18px; font-weight: bold; display: block; }
+
+        .delay-box { padding: 5px 10px; border-radius: 2px; font-weight: bold; margin-top: 5px; display: inline-block; }
         
-        .card {
-            background: rgba(255,255,255,0.03); border-radius: 12px;
-            padding: 15px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .label-sm { font-size: 11px; color: var(--subtext); text-transform: uppercase; letter-spacing: 1px; }
-        .val-lg { font-size: 18px; font-weight: 700; margin-top: 5px; display: block; }
-
-        .badge {
-            display: inline-block; padding: 4px 10px; border-radius: 6px;
-            font-size: 12px; font-weight: 800; margin-top: 10px;
-        }
-
-        /* Animáció a pulzáló LIVE-hoz */
-        .live-circle {
-            width: 10px; height: 10px; background: var(--success);
-            border-radius: 50%; display: inline-block; margin-right: 10px;
-            box-shadow: 0 0 10px var(--success);
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        #fleet-list { height: 200px; border-top: 1px solid #444; overflow-y: auto; padding: 10px; background: rgba(0,0,0,0.2); }
+        .fleet-item { padding: 8px; border-bottom: 1px solid #333; cursor: pointer; font-size: 13px; }
+        .fleet-item:hover { background: rgba(255,255,255,0.05); }
     </style>
 </head>
 <body>
-    <nav>
-        <div class="live-circle"></div>
-        <span style="font-weight: 800; letter-spacing: 2px;">BKK FUTÁR | DISPATCHER CONTROL</span>
-    </nav>
 
-    <div id="sidebar">
-        <div class="stat-group">
-            <h2 id="focus-id" style="margin-top:0; color: var(--accent);">Válassz járművet</h2>
-            
-            <div id="details" style="display: none;">
-                <div class="card">
-                    <span class="label-sm">Járművezető</span>
-                    <span id="driver-name" class="val-lg">---</span>
-                </div>
-                
-                <div class="card">
-                    <div style="display: flex; justify-content: space-between;">
-                        <div>
-                            <span class="label-sm">Sebesség</span>
-                            <span id="speed-val" class="val-lg">0 km/h</span>
-                        </div>
-                        <div style="text-align: right;">
-                            <span class="label-sm">Járatszám</span>
-                            <span id="line-id" class="val-lg" style="color: var(--accent);">--</span>
-                        </div>
-                    </div>
-                </div>
+<nav>
+    <div class="logo-text">PROJECT GOB</div>
+    <div class="sub-text">Integrated Network Dispatch | Budapest</div>
+</nav>
 
-                <div class="card">
-                    <span class="label-sm">Célállomás / Következő</span>
-                    <span id="next-stop" class="val-lg">---</span>
-                    <div id="status-badge" class="badge">MEGHATÁROZÁSA...</div>
-                </div>
-            </div>
+<div id="map"></div>
 
-            <div id="placeholder" style="color: var(--subtext); text-align: center; margin-top: 40px;">
-                <p>Nincs kijelölt jármű a térképen.</p>
-            </div>
-        </div>
+<div id="sidebar">
+    <div class="panel-header">VEHICLE TELEMETRY</div>
+    <div class="stats" id="stats-panel">
+        <p style="color: #666;">Válassz egy járművet a térképen vagy a listából.</p>
     </div>
-    
-    <div id="map"></div>
+    <div class="panel-header" style="background: #333; color: white;">ACTIVE FLEET</div>
+    <div id="fleet-list"></div>
+</div>
 
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <script>
-        const socket = io();
-        const tramElements = {};
-        let selectedTramId = null;
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+    const socket = io();
+    const vehicles = {};
+    let selectedId = null;
 
-        socket.on('tramUpdate', (data) => {
-            if (!tramElements[data.id]) {
-                const el = document.createElement('div');
-                el.className = 'tram';
-                el.onclick = () => selectTram(data.id);
-                document.getElementById('map').appendChild(el);
-                tramElements[data.id] = { el: el, data: data };
-            }
+    socket.on('tramUpdate', (data) => {
+        // Frissítés vagy létrehozás
+        if (!vehicles[data.id]) {
+            const el = document.createElement('div');
+            el.className = 'tram';
+            el.onclick = () => selectVehicle(data.id);
+            document.getElementById('map').appendChild(el);
+            vehicles[data.id] = { el: el };
+        }
 
-            const tram = tramElements[data.id];
-            tram.data = data; // Frissítjük az adatokat a memóriában
+        const v = vehicles[data.id];
+        v.data = data;
 
-            // Pozíció frissítése
-            const scale = 0.08; 
-            const centerX = window.innerWidth / 2;
-            const centerY = window.innerHeight / 2;
+        // Pozíció (Állítsd be a scale-t a mapodhoz!)
+        const scale = 0.08;
+        const cX = window.innerWidth / 2;
+        const cY = window.innerHeight / 2;
+        
+        v.el.style.left = (cX + data.x * scale) + 'px';
+        v.el.style.top = (cY + data.z * scale) + 'px';
+        v.el.style.transform = `translate(-50%, -50%) rotate(${data.heading}deg)`;
 
-            tram.el.style.left = (centerX + (data.x * scale)) + 'px';
-            tram.el.style.top = (centerY + (data.z * scale)) + 'px';
-            tram.el.style.transform = `translate(-50%, -50%) rotate(${data.heading}deg)`;
+        if (selectedId === data.id) updateStats();
+        updateFleetList();
+    });
 
-            // Ha ez a kiválasztott villamos, frissítjük az oldalsávot
-            if (selectedTramId === data.id) {
-                updateUI(data);
-            }
+    function selectVehicle(id) {
+        if (selectedId && vehicles[selectedId]) vehicles[selectedId].el.classList.remove('selected');
+        selectedId = id;
+        vehicles[id].el.classList.add('selected');
+        updateStats();
+    }
+
+    function updateStats() {
+        const data = vehicles[selectedId].data;
+        const delayColor = data.delay > 30 ? '#ff4444' : '#00ff00';
+        const delayText = data.delay > 30 ? `+${Math.floor(data.delay/60)}m ${data.delay%60}s Késés` : "Menetrend szerint";
+
+        document.getElementById('stats-panel').innerHTML = `
+            <div class="data-row"><span class="label">Járatszám</span><span class="value" style="color:var(--gob-yellow)">Line ${data.line}</span></div>
+            <div class="data-row"><span class="label">Járművezető</span><span class="value">${data.driver}</span></div>
+            <div class="data-row"><span class="label">Sebesség</span><span class="value">${data.speed} km/h</span></div>
+            <div class="data-row"><span class="label">Következő megálló</span><span class="value">${data.nextStop}</span></div>
+            <div class="delay-box" style="background: ${delayColor}22; color: ${delayColor}">${delayText}</div>
+        `;
+    }
+
+    function updateFleetList() {
+        const list = document.getElementById('fleet-list');
+        list.innerHTML = "";
+        Object.keys(vehicles).forEach(id => {
+            const d = vehicles[id].data;
+            const item = document.createElement('div');
+            item.className = 'fleet-item';
+            item.innerHTML = `<b>[Line ${d.line}]</b> ${d.driver}`;
+            item.onclick = () => selectVehicle(id);
+            list.appendChild(item);
         });
+    }
+</script>
 
-        function selectTram(id) {
-            // Régi kiválasztás levétele
-            if (selectedTramId && tramElements[selectedTramId]) {
-                tramElements[selectedTramId].el.classList.remove('selected');
-            }
-
-            selectedTramId = id;
-            const tram = tramElements[id];
-            tram.el.classList.add('selected');
-
-            document.getElementById('details').style.display = 'block';
-            document.getElementById('placeholder').style.display = 'none';
-            updateUI(tram.data);
-        }
-
-        function updateUI(data) {
-            document.getElementById('focus-id').innerText = `Jármű: ${data.id}`;
-            document.getElementById('driver-name').innerText = data.driver;
-            document.getElementById('speed-val').innerText = data.speed + " km/h";
-            document.getElementById('line-id').innerText = data.line;
-            document.getElementById('next-stop').innerText = data.nextStop;
-
-            const badge = document.getElementById('status-badge');
-            if (data.delay > 30) {
-                badge.innerText = `+${Math.floor(data.delay/60)}p ${data.delay%60}s KÉSÉS`;
-                badge.style.background = 'rgba(255, 71, 87, 0.2)';
-                badge.style.color = '#ff4757';
-            } else {
-                badge.innerText = `MENETREND SZERINT`;
-                badge.style.background = 'rgba(46, 213, 115, 0.2)';
-                badge.style.color = '#2ed573';
-            }
-        }
-    </script>
 </body>
 </html>
