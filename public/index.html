@@ -2,158 +2,453 @@
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
-    <title>GOB TRANSIT | FORGALMIRÁNYÍTÁS</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VILLAMOS SZIMULÁTOR | HUNGARY</title>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700;900&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --accent: #facc15; /* Villamos-sárga */
-            --ok: #22c55e;
-            --warn: #fb923c;
-            --bad: #ef4444;
-            --bg: #0a0a0c;
-            --panel: #141417;
-            --border: #27272a;
-            --text: #f4f4f5;
-            --dim: #a1a1aa;
+            --bg-dark: #0a0a0f;
+            --bg-darker: #050507;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent: #00d2ff; /* Elektromos kék a modern hatáshoz */
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; }
-        h1, h2, h3, .nav-logo { font-family: 'Chakra Petch', sans-serif; text-transform: uppercase; }
 
-        /* NAVIGÁCIÓ */
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: 'Montserrat', sans-serif;
+            overflow-x: hidden;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(0, 210, 255, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(100, 0, 255, 0.08) 0%, transparent 40%);
+            background-attachment: fixed;
+        }
+
+        /* --- LIQUID GLASS STÍLUS --- */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            border-radius: 16px;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .glass-panel:hover {
+            box-shadow: 0 12px 40px 0 rgba(0, 210, 255, 0.2);
+            border-color: rgba(0, 210, 255, 0.3);
+            transform: translateY(-3px);
+        }
+
+        /* --- NAVIGÁCIÓ --- */
         nav {
-            height: 60px;
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            padding: 0 4%;
-            background: #000;
-            border-bottom: 2px solid var(--accent);
+            align-items: center;
+            padding: 20px 5%;
             position: sticky;
-            top: 0; z-index: 1000;
+            top: 20px;
+            z-index: 100;
+            margin: 0 2%;
         }
-        .nav-logo { color: var(--accent); font-weight: bold; font-size: 1.2rem; }
+
+        .logo {
+            font-weight: 900;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, #fff, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
         .nav-links button {
-            background: none; border: none; color: var(--dim); cursor: pointer;
-            padding: 10px 15px; font-weight: 600; transition: 0.2s;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            margin-left: 25px;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            position: relative;
+            padding: 5px 0;
+            transition: 0.3s;
         }
-        .nav-links button.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
 
-        section { display: none; padding: 30px 4%; min-height: 90vh; animation: slideUp 0.4s ease-out; }
+        .nav-links button::after {
+            content: '';
+            position: absolute; bottom: 0; left: 0; width: 0%; height: 2px;
+            background: var(--accent);
+            transition: 0.3s ease-in-out;
+        }
+
+        .nav-links button:hover, .nav-links button.active {
+            color: var(--text-primary);
+        }
+        .nav-links button:hover::after, .nav-links button.active::after {
+            width: 100%;
+        }
+
+        /* --- SZEKCIÓK ÁLTALÁNOS --- */
+        section {
+            display: none;
+            min-height: 85vh;
+            padding: 50px 5%;
+            animation: fadeIn 0.6s ease-out;
+        }
         section.active { display: block; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } }
 
-        /* DASHBOARD */
-        .grid-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-        .stat-box { background: var(--panel); border: 1px solid var(--border); padding: 20px; border-radius: 4px; border-top: 3px solid var(--accent); }
-        .stat-box small { color: var(--dim); font-size: 11px; display: block; margin-bottom: 5px; }
-        .stat-box span { font-size: 24px; font-weight: bold; color: var(--accent); }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); scale: 0.98; }
+            to { opacity: 1; transform: translateY(0); scale: 1; }
+        }
 
-        /* TÉRKÉP / RADAR */
-        #radar-container { display: flex; gap: 20px; height: 700px; margin-top: 20px; }
-        #map-area { flex: 3; background: #0c0c0e; border: 1px solid var(--border); position: relative; overflow: hidden; }
-        #map-area::before {
+        h2.section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            text-shadow: 0 0 20px rgba(0, 210, 255, 0.3);
+        }
+
+        /* --- FŐOLDAL (HOME) --- */
+        #home {
+            display: flex; /* Alapértelmezetten flex, de a JS felülírja a none-t, ha nem aktív */
+            align-items: center;
+            gap: 50px;
+        }
+        /* Fontos: ha a JS kikapcsolja, akkor ne legyen flex */
+        #home:not(.active) { display: none; }
+
+        .hero-text { flex: 1; }
+        .hero-text h1 {
+            font-size: 4rem; font-weight: 900; line-height: 1.1; margin-bottom: 20px;
+            background: linear-gradient(135deg, #ffffff 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero-text p {
+            font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 30px; max-width: 500px; line-height: 1.6;
+        }
+
+        .cta-button {
+            padding: 15px 40px;
+            background: linear-gradient(90deg, var(--accent), #0099ff);
+            border: none;
+            border-radius: 50px;
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(0, 210, 255, 0.4);
+            transition: 0.3s;
+            position: relative; overflow: hidden;
+        }
+        .cta-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 50px rgba(0, 210, 255, 0.6);
+        }
+        /* Liquid effect on button hover */
+        .cta-button::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: 0.5s;
+        }
+        .cta-button:hover::before { left: 100%; }
+
+        .hero-image {
+            flex: 1;
+            height: 500px;
+            position: relative;
+            overflow: hidden;
+            animation: floating 6s ease-in-out infinite;
+        }
+        .hero-image img { width: 100%; height: 100%; object-fit: cover; }
+        @keyframes floating { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-20px); } }
+
+        /* --- GRID LAYOUTS (JÁRMŰVEK & CSAPAT) --- */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .card {
+            overflow: hidden;
+            text-align: left;
+        }
+        .card-img-top {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .card-body { padding: 25px; }
+        .card-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 10px; color: var(--accent); }
+        .card-text { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5; }
+
+        /* Csapat specifikus */
+        .team-member .card-img-top { height: 250px; object-position: top; }
+        .role-badge {
+            display: inline-block; padding: 4px 10px; background: rgba(0, 210, 255, 0.1);
+            color: var(--accent); border-radius: 20px; font-size: 0.8rem; font-weight: 700; margin-bottom: 10px;
+        }
+
+        /* --- ÉLŐ TÉRKÉP --- */
+        #map-container {
+            display: flex; gap: 20px; height: 70vh;
+        }
+        #map-view {
+            flex: 3; position: relative; overflow: hidden; background: #020204;
+        }
+        /* Térkép rács és radar effekt */
+        #map-view::before {
             content: ""; position: absolute; inset: 0;
-            background-image: radial-gradient(var(--border) 1px, transparent 1px);
-            background-size: 30px 30px;
+            background-image: 
+                linear-gradient(var(--glass-border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--glass-border) 1px, transparent 1px);
+            background-size: 40px 40px;
+            mask-image: radial-gradient(circle, black 60%, transparent 100%);
         }
-        
-        .tram { 
-            position: absolute; width: 10px; height: 30px; 
-            border-radius: 2px; transition: all 0.5s linear; 
-            cursor: pointer; border: 1px solid white;
+        .radar-sweep {
+            position: absolute; width: 100%; height: 100%;
+            background: conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(0, 210, 255, 0.1) 60deg, transparent 90deg);
+            animation: rotate 8s linear infinite; opacity: 0.5;
         }
-        .tram-label {
-            position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%);
-            background: black; color: white; font-size: 10px; padding: 2px 5px;
-            white-space: nowrap; border: 1px solid var(--border);
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .tram-marker {
+            position: absolute; width: 14px; height: 14px; background: var(--accent);
+            border-radius: 50%; transform: translate(-50%, -50%);
+            box-shadow: 0 0 15px var(--accent), 0 0 30px var(--accent);
+            transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .tram-marker::after {
+            content: attr(data-id); position: absolute; top: -25px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.7); padding: 2px 6px; border-radius: 4px; font-size: 10px; white-space: nowrap;
         }
 
-        #infopanel { flex: 1; background: var(--panel); border: 1px solid var(--border); padding: 20px; }
-        .log-entry { font-size: 12px; padding: 8px 0; border-bottom: 1px solid #1f1f23; color: var(--dim); }
-        .log-time { color: var(--accent); margin-right: 8px; }
+        #map-sidebar {
+            flex: 1; padding: 25px; display: flex; flex-direction: column;
+        }
+        #player-list-container { flex-grow: 1; overflow-y: auto; margin-top: 20px; }
+        .player-item {
+            padding: 12px; margin-bottom: 10px; border-radius: 8px; background: rgba(255,255,255,0.03);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .status-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 10px var(--accent); }
 
-        /* JÁRMŰLISTA */
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: var(--panel); }
-        th { text-align: left; padding: 15px; border-bottom: 1px solid var(--border); color: var(--dim); font-size: 12px; }
-        td { padding: 15px; border-bottom: 1px solid var(--border); }
+        /* --- RESPONSIVE --- */
+        @media (max-width: 900px) {
+            #home { flex-direction: column; text-align: center; }
+            .hero-text h1 { font-size: 3rem; }
+            .hero-image { width: 100%; height: 350px; }
+            nav { flex-direction: column; gap: 20px; }
+            .nav-links button { margin: 0 10px; }
+            #map-container { flex-direction: column; height: auto; }
+            #map-view { height: 400px; }
+        }
     </style>
 </head>
 <body>
 
-<nav>
-    <div class="nav-logo">GOB TRANSIT | CENTRAL DISPATCH</div>
+<nav class="glass-panel">
+    <div class="logo">TRAM SIM HUNGARY</div>
     <div class="nav-links">
-        <button onclick="showTab('home')" id="nav-home" class="active">DASHBOARD</button>
-        <button onclick="showTab('radar')" id="nav-radar">ÉLŐ TÉRKÉP</button>
-        <button onclick="showTab('fleet')" id="nav-fleet">JÁRMŰPARK</button>
-        <button onclick="showTab('staff')" id="nav-staff">SZEMÉLYZET</button>
+        <button onclick="switchTab('home')" id="btn-home" class="active">FŐOLDAL</button>
+        <button onclick="switchTab('vehicles')" id="btn-vehicles">JÁRMŰVEK</button>
+        <button onclick="switchTab('map')" id="btn-map">ÉLŐ TÉRKÉP</button>
+        <button onclick="switchTab('team')" id="btn-team">CSAPAT</button>
     </div>
 </nav>
 
 <section id="home" class="active">
-    <h2 style="margin-bottom: 20px;">ÜZEMIRÁNYÍTÁSI ÖSSZEGZÉS</h2>
-    <div class="grid-stats">
-        <div class="stat-box"><small>FORGALOMBAN</small><span id="count-active">0</span> db kocsik</div>
-        <div class="stat-box"><small>VONALI FESZÜLTSÉG</small><span>600V DC</span></div>
-        <div class="stat-box"><small>ÁTLAGOS SEBESSÉG</small><span>24 km/h</span></div>
-        <div class="stat-box"><small>FORGALMI ZAVAR</small><span style="color:var(--ok)">NINCS</span></div>
+    <div class="hero-text">
+        <h1>A VÁROS<br>A TE KEZEDBEN</h1>
+        <p>Éld át a budapesti villamosvezetés élményét a valaha készült legrészletesebb szimulátorban. Valós menetrendek, dinamikus forgalom és lélegzetelállító grafika vár.</p>
+        <button class="cta-button" onclick="alert('Játék indítása... (Demo funkció)')">JÁTÉK INDÍTÁSA</button>
+    </div>
+    <div class="hero-image glass-panel">
+        <img src="https://via.placeholder.com/800x600/0a0a0f/00d2ff?text=GAME+SCREENSHOT+PLACEHOLDER" alt="Villamos Szimulátor">
+        <div style="position: absolute; inset: 0; background: linear-gradient(to top, var(--bg-darker), transparent);"></div>
     </div>
 </section>
 
-<section id="radar">
-    <div id="radar-container">
-        <div id="map-area">
-            <svg id="tracks" style="position:absolute; inset:0; width:100%; height:100%;">
-                <path d="M 50 350 Q 400 350 750 350" stroke="#1f1f23" stroke-width="8" fill="none"/>
-                <path d="M 400 50 L 400 650" stroke="#1f1f23" stroke-width="8" fill="none"/>
-            </svg>
-            <div id="vehicle-layer"></div>
-        </div>
-        <div id="infopanel">
-            <h3 style="font-size: 14px; margin-bottom: 15px; border-bottom: 1px solid var(--accent);">TELEMETRIA</h3>
-            <div id="telemetry-data" style="font-size: 13px; line-height: 2;">
-                Válasszon egy szerelvényt a térképen!
+<section id="vehicles">
+    <h2 class="section-title">JELENLEGI FLOTTA</h2>
+    <div class="grid-container">
+        <div class="card glass-panel">
+            <img src="https://via.placeholder.com/400x250/0a0a0f/00d2ff?text=TATRA+T5C5" class="card-img-top" alt="Tatra T5C5">
+            <div class="card-body">
+                <h3 class="card-title">TATRA T5C5</h3>
+                <p class="card-text">A klasszikus csehszlovák "kocka". Kétirányú, robusztus és a város elengedhetetlen része évtizedek óta.</p>
             </div>
-            <h3 style="font-size: 14px; margin-top: 30px; margin-bottom: 15px; border-bottom: 1px solid var(--accent);">ESEMÉNYNAPLÓ</h3>
-            <div id="event-log">
-                <div class="log-entry"><span class="log-time">21:50</span> Központ online.</div>
+        </div>
+        <div class="card glass-panel">
+            <img src="https://via.placeholder.com/400x250/0a0a0f/eab308?text=SIEMENS+COMBINO" class="card-img-top" alt="Siemens Combino">
+            <div class="card-body">
+                <h3 class="card-title" style="color: #eab308">SIEMENS COMBINO</h3>
+                <p class="card-text">A Nagykörút királya. Alacsonypadlós óriás, amely hatalmas utaskapacitással rendelkezik.</p>
+            </div>
+        </div>
+        <div class="card glass-panel">
+            <img src="https://via.placeholder.com/400x250/0a0a0f/00d2ff?text=CAF+URBOS" class="card-img-top" alt="CAF Urbos 3">
+            <div class="card-body">
+                <h3 class="card-title">CAF URBOS 3</h3>
+                <p class="card-text">A legmodernebb spanyol szerelvények. Csendes futás, modern utastér és fejlett elektronika.</p>
             </div>
         </div>
     </div>
 </section>
 
-<section id="fleet">
-    <h2>AKTÍV JÁRMŰVEK LISTÁJA</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>PÁLYASZÁM</th>
-                <th>TÍPUS</th>
-                <th>VONAL</th>
-                <th>STÁTUSZ</th>
-            </tr>
-        </thead>
-        <tbody id="fleet-table-body">
-            </tbody>
-    </table>
+<section id="map">
+    <h2 class="section-title">VALÓS IDEJŰ KÖVETÉS</h2>
+    <div id="map-container">
+        <div id="map-view" class="glass-panel">
+            <div class="radar-sweep"></div>
+            <div id="markers-layer"></div>
+            </div>
+        <div id="map-sidebar" class="glass-panel">
+            <h3>ONLINE JÁTÉKOSOK</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">Aktív szerelvények a hálózaton.</p>
+            <div id="player-list-container">
+                <p style="color: var(--text-secondary); font-style: italic;">Adatok betöltése...</p>
+            </div>
+        </div>
+    </div>
 </section>
 
-<section id="staff">
-    <h2>MENETIRÁNYÍTÓK ÉS JÁRMŰVEZETŐK</h2>
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; margin-top: 20px;">
-        <div class="stat-box">
-            <h3>Diszpécser #01</h3>
-            <p style="color: var(--dim)">Állapot: Szolgálatban</p>
+<section id="team">
+    <h2 class="section-title">A PROJEKT MÖGÖTT</h2>
+    <div class="grid-container">
+        <div class="card glass-panel team-member" style="border-color: var(--accent);">
+            <img src="https://via.placeholder.com/400x400/0a0a0f/00d2ff?text=LEAD+DEV" class="card-img-top" alt="Csapatvezető">
+            <div class="card-body">
+                <span class="role-badge">PROJECT LEAD</span>
+                <h3 class="card-title">Kovács Dávid</h3>
+                <p class="card-text">A projekt alapítója és vezető fejlesztője. Felelős a fizikai motorért és a hálózati kódért.</p>
+            </div>
+        </div>
+        <div class="card glass-panel team-member">
+            <img src="https://via.placeholder.com/400x400/0a0a0f/a0a0b0?text=3D+ARTIST" class="card-img-top" alt="3D Modellező">
+            <div class="card-body">
+                <span class="role-badge" style="color: var(--text-secondary); background: rgba(255,255,255,0.1)">3D ARTIST</span>
+                <h3 class="card-title" style="color: var(--text-primary)">Nagy Anna</h3>
+                <p class="card-text">A járművek és a környezet részletes 3D modelljeinek megalkotója.</p>
+            </div>
+        </div>
+        <div class="card glass-panel team-member">
+            <img src="https://via.placeholder.com/400x400/0a0a0f/a0a0b0?text=LEVEL+DESIGN" class="card-img-top" alt="Pályatervező">
+            <div class="card-body">
+                <span class="role-badge" style="color: var(--text-secondary); background: rgba(255,255,255,0.1)">LEVEL DESIGNER</span>
+                <h3 class="card-title" style="color: var(--text-primary)">Szabó Péter</h3>
+                <p class="card-text">A városi úthálózat, a vágányok és a menetrendek szakértője.</p>
+            </div>
         </div>
     </div>
 </section>
 
 <script>
+    // --- NAVIGÁCIÓ KEZELÉS ---
+    function switchTab(tabId) {
+        // Az összes szekció elrejtése
+        document.querySelectorAll('section').forEach(s => {
+            s.classList.remove('active');
+            // Külön kezeljük a home flex tulajdonságát
+            if(s.id === 'home') s.style.display = 'none'; 
+        });
+
+        // Az összes gomb inaktívvá tétele
+        document.querySelectorAll('.nav-links button').forEach(b => b.classList.remove('active'));
+        
+        // A kiválasztott aktiválása
+        const selectedSection = document.getElementById(tabId);
+        selectedSection.classList.add('active');
+        if(tabId === 'home') selectedSection.style.display = 'flex'; // Home visszaállítása flex-re
+
+        document.getElementById('btn-' + tabId).classList.add('active');
+    }
+
+
+    // --- TÉRKÉP LOGIKA (DEMO MÓD) ---
+    const markersLayer = document.getElementById('markers-layer');
+    const playerListContainer = document.getElementById('player-list-container');
+    const vehicles = {};
+
+    // POZÍCIÓ FRISSÍTÉS (Ezt hívná a Socket.IO)
+    function updateMap(data) {
+        // Marker kezelés
+        if(!vehicles[data.id]){
+            const el = document.createElement('div');
+            el.className = 'tram-marker';
+            el.setAttribute('data-id', data.id);
+            markersLayer.appendChild(el);
+            vehicles[data.id] = { marker: el };
+        }
+
+        const v = vehicles[data.id];
+        // Koordináták konvertálása a térkép méretére (DEMO skálázás)
+        const mapWidth = document.getElementById('map-view').offsetWidth;
+        const mapHeight = document.getElementById('map-view').offsetHeight;
+        
+        // Feltételezünk egy 1000x1000-es játékvilágot, amit ráskálázunk a div-re
+        const xPos = (data.x / 1000) * mapWidth;
+        const yPos = (data.z / 1000) * mapHeight;
+
+        v.marker.style.left = `${xPos}px`;
+        v.marker.style.top = `${yPos}px`;
+        
+        updateSidePanel();
+    }
+
+    function updateSidePanel() {
+        playerListContainer.innerHTML = '';
+        Object.keys(vehicles).forEach(id => {
+            const item = document.createElement('div');
+            item.className = 'player-item';
+            item.innerHTML = `
+                <span><span class="status-dot" style="display:inline-block; margin-right: 8px;"></span>Jármű ${id}</span>
+                <small style="color:var(--text-secondary)">Menetben</small>
+            `;
+            playerListContainer.appendChild(item);
+        });
+    }
+
+
+    // --- SZIMULÁCIÓS SCRIPT (DEMO CÉLRA) ---
+    // EZT TÖRÖLD, HA ÉLES SOCKET KAPCSOLATOT HASZNÁLSZ
+    const demoTrams = [
+        { id: "T-4012", x: 200, z: 200, dx: 2, dz: 1 },
+        { id: "C-2205", x: 800, z: 800, dx: -1.5, dz: -2 },
+        { id: "U-3310", x: 100, z: 900, dx: 3, dz: -0.5 }
+    ];
+
+    setInterval(() => {
+        // Csak akkor frissítsen, ha a térkép fül aktív
+        if(!document.getElementById('map').classList.contains('active')) return;
+
+        demoTrams.forEach(tram => {
+            tram.x += tram.dx;
+            tram.z += tram.dz;
+
+            // Visszapattanás a falakról (0-1000 tartomány)
+            if(tram.x < 0 || tram.x > 1000) tram.dx *= -1;
+            if(tram.z < 0 || tram.z > 1000) tram.dz *= -1;
+
+            // Socket hívás szimulálása
+            updateMap({ id: tram.id, x: tram.x, z: tram.z });
+        });
+    }, 50); // 50ms frissítés a sima mozgáshoz
+
     const socket = io();
     const vehicles = {};
     const vehicleLayer = document.getElementById('vehicle-layer');
@@ -228,6 +523,7 @@
             <td style="color:${data.speed > 0 ? 'var(--ok)' : 'var(--warn)'}">${data.speed > 0 ? 'FORGALOMBAN' : 'ÁLL'}</td>
         `;
     }
+
 </script>
 
 </body>
