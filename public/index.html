@@ -1,276 +1,298 @@
 <!DOCTYPE html>
 <html lang="hu">
 <head>
-<meta charset="UTF-8">
-<title>PROJECT GOB | BLACK OPS</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <meta charset="UTF-8">
+    <title>PROJECT GOB | BLACK OPS COMMAND</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 
-<style>
-:root{
-    --accent:#a855f7;
-    --ok:#22c55e;
-    --warn:#facc15;
-    --bad:#ef4444;
-    --bg:#050507;
-    --panel:#0b0b10;
-    --border:#1f1f26;
-    --grid:rgba(255,255,255,.03);
-    --text:#e5e7eb;
-    --dim:#6b7280;
-}
+    <style>
+        :root {
+            --accent: #a855f7;
+            --ok: #22c55e;
+            --warn: #facc15;
+            --bad: #ef4444;
+            --bg: #050507;
+            --panel: #0b0b10;
+            --border: #1f1f26;
+            --grid: rgba(255, 255, 255, .03);
+            --text: #e5e7eb;
+            --dim: #6b7280;
+        }
 
-*{margin:0;padding:0;box-sizing:border-box}
-body{
-    background:var(--bg);
-    color:var(--text);
-    font-family:Inter,system-ui;
-}
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
 
-/* NAV */
-nav{
-    height:64px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:0 6%;
-    background:#030305;
-    border-bottom:1px solid var(--border);
-}
-nav b{
-    color:var(--accent);
-    letter-spacing:2px;
-    font-size:18px;
-}
-nav span{
-    color:var(--dim);
-    font-size:12px;
-}
+        h1, h2, h3, .nav-logo { font-family: 'Orbitron', sans-serif; text-transform: uppercase; }
 
-/* SECTIONS */
-section{display:none;padding:40px 6%;min-height:90vh}
-section.active{display:block}
+        /* NAVIGÁCIÓ */
+        nav {
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 6%;
+            background: rgba(3, 3, 5, 0.95);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
 
-/* RADAR LAYOUT */
-#layout{
-    display:flex;
-    gap:16px;
-    margin-top:20px;
-    height:680px;
-}
+        .nav-logo { color: var(--accent); letter-spacing: 3px; font-weight: bold; font-size: 20px; }
 
-/* MAP */
-#map{
-    flex:3;
-    position:relative;
-    background:#060609;
-    border:1px solid var(--border);
-    overflow:hidden;
-}
+        .nav-links { display: flex; gap: 25px; }
 
-/* GRID */
-#map::before{
-    content:"";
-    position:absolute;
-    inset:0;
-    background:
-        linear-gradient(var(--grid) 1px,transparent 1px),
-        linear-gradient(90deg,var(--grid) 1px,transparent 1px);
-    background-size:40px 40px;
-    pointer-events:none;
-}
+        .nav-links button {
+            background: none;
+            border: none;
+            color: var(--dim);
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 13px;
+            transition: 0.3s;
+            padding: 10px 5px;
+            border-bottom: 2px solid transparent;
+        }
 
-/* SCAN LINE */
-#map::after{
-    content:"";
-    position:absolute;
-    inset:0;
-    background:linear-gradient(
-        180deg,
-        transparent,
-        rgba(168,85,247,.08),
-        transparent
-    );
-    animation:scan 6s linear infinite;
-    pointer-events:none;
-}
-@keyframes scan{
-    from{transform:translateY(-100%)}
-    to{transform:translateY(100%)}
-}
+        .nav-links button:hover, .nav-links button.active {
+            color: var(--accent);
+            border-bottom: 2px solid var(--accent);
+        }
 
-/* SVG NETWORK */
-#network{
-    position:absolute;
-    inset:0;
-    opacity:.9;
-}
+        /* SZEKCIÓK */
+        section { display: none; padding: 40px 6%; min-height: calc(100vh - 70px); animation: fadeIn 0.5s ease; }
+        section.active { display: block; }
 
-/* VEHICLE */
-.tram{
-    position:absolute;
-    width:12px;
-    height:34px;
-    border:2px solid black;
-    border-radius:2px;
-    z-index:10;
-    box-shadow:0 0 12px rgba(0,0,0,.8);
-}
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-/* HEATMAP */
-.heat{
-    position:absolute;
-    width:180px;
-    height:180px;
-    border-radius:50%;
-    background:radial-gradient(circle,
-        rgba(239,68,68,.5) 0%,
-        rgba(239,68,68,.25) 35%,
-        rgba(239,68,68,0) 70%);
-    mix-blend-mode:screen;
-    pointer-events:none;
-}
+        /* FŐOLDAL (DASHBOARD) */
+        .hero { text-align: center; padding: 60px 0; }
+        .hero h1 { font-size: 3.5rem; margin-bottom: 20px; color: var(--text); text-shadow: 0 0 20px rgba(168,85,247,0.3); }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 40px; }
+        .stat-card { background: var(--panel); border: 1px solid var(--border); padding: 25px; border-radius: 4px; text-align: center; }
+        .stat-card h4 { color: var(--dim); font-size: 12px; margin-bottom: 10px; }
+        .stat-card .value { font-size: 24px; color: var(--accent); font-weight: bold; }
 
-/* PANEL */
-#side{
-    flex:1;
-    background:var(--panel);
-    border:1px solid var(--border);
-    padding:20px;
-    display:flex;
-    flex-direction:column;
-    gap:20px;
-}
-.block{
-    border-left:3px solid var(--accent);
-    padding-left:12px;
-}
-.block h3{
-    font-size:12px;
-    letter-spacing:1px;
-    color:var(--accent);
-    margin-bottom:10px;
-}
-.block p{
-    font-size:13px;
-    color:var(--dim);
-    line-height:1.4;
-}
-</style>
+        /* CSAPAT ÉS JÁRMŰVEK KÁRTYÁK */
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .card { background: var(--panel); border: 1px solid var(--border); padding: 20px; border-left: 4px solid var(--accent); position: relative; overflow: hidden; }
+        .card h3 { margin-bottom: 5px; }
+        .card p { color: var(--dim); font-size: 14px; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: bold; margin-top: 10px; text-transform: uppercase; }
+        .badge.active { background: rgba(34,197,94,0.2); color: var(--ok); }
+
+        /* RADAR LAYOUT (A korábbi kódod alapján) */
+        #layout { display: flex; gap: 16px; margin-top: 20px; height: 650px; }
+        #map { flex: 3; position: relative; background: #060609; border: 1px solid var(--border); overflow: hidden; border-radius: 4px; }
+        #map::before {
+            content: ""; position: absolute; inset: 0;
+            background: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+            background-size: 40px 40px; pointer-events: none;
+        }
+        #map::after {
+            content: ""; position: absolute; inset: 0;
+            background: linear-gradient(180deg, transparent, rgba(168,85,247,0.1), transparent);
+            animation: scan 6s linear infinite; pointer-events: none;
+        }
+        @keyframes scan { from { transform: translateY(-100%); } to { transform: translateY(100%); } }
+        
+        #network { position: absolute; inset: 0; opacity: 0.8; }
+        .tram { position: absolute; width: 12px; height: 32px; border: 2px solid #000; border-radius: 2px; z-index: 10; cursor: pointer; transition: transform 0.2s; }
+        .heat { position: absolute; width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle, rgba(239,68,68,0.4) 0%, transparent 70%); mix-blend-mode: screen; pointer-events: none; }
+
+        #side { flex: 1; background: var(--panel); border: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+        .block { border-left: 3px solid var(--accent); padding-left: 12px; }
+        .block h3 { font-size: 12px; letter-spacing: 1px; color: var(--accent); margin-bottom: 10px; }
+        .block p { font-size: 13px; color: var(--dim); line-height: 1.6; }
+    </style>
 </head>
 
 <body>
 
 <nav>
-    <b>PROJECT GOB</b>
-    <span>BLACK OPS RADAR MODE</span>
+    <div class="nav-logo">PROJECT GOB</div>
+    <div class="nav-links">
+        <button onclick="switchTab('home')" id="btn-home" class="active">FŐOLDAL</button>
+        <button onclick="switchTab('team')" id="btn-team">CSAPAT</button>
+        <button onclick="switchTab('vehicles')" id="btn-vehicles">JÁRMŰVEK</button>
+        <button onclick="switchTab('radar')" id="btn-radar">RADAR</button>
+    </div>
 </nav>
 
-<section class="active">
+<section id="home" class="active">
+    <div class="hero">
+        <h1>COMMAND CENTER</h1>
+        <p style="color: var(--dim); max-width: 600px; margin: 0 auto;">Üdvözöljük az operatív irányítóközpontban. Figyelje a hálózatot, kezelje az egységeket és tartsa fenn a rendet a szektorban.</p>
+    </div>
+    
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h4>AKTÍV EGYSÉGEK</h4>
+            <div class="value" id="stat-active">0</div>
+        </div>
+        <div class="stat-card">
+            <h4>HÁLÓZATI TERHELÉS</h4>
+            <div class="value" id="stat-load">12%</div>
+        </div>
+        <div class="stat-card">
+            <h4>RIASZTÁSI SZINT</h4>
+            <div class="value" style="color: var(--ok);">NORMAL</div>
+        </div>
+    </div>
+</section>
 
-<h1 style="letter-spacing:2px">LIVE NETWORK SURVEILLANCE</h1>
+<section id="team">
+    <h2 style="margin-bottom: 30px;">OPERATÍV SZEMÉLYZET</h2>
+    <div class="card-grid">
+        <div class="card">
+            <h3>Ghost Operatív</h3>
+            <p>Bevetési specialista - Hálózati elemzés</p>
+            <span class="badge active">Online</span>
+        </div>
+        <div class="card">
+            <h3>Viper-1</h3>
+            <p>Logisztikai tiszt - Jármű koordináció</p>
+            <span class="badge active">Online</span>
+        </div>
+        <div class="card">
+            <h3>Specter</h3>
+            <p>Rendszergazda - Kriptográfiai részleg</p>
+            <span class="badge" style="background: rgba(107,114,128,0.2); color: var(--dim);">Offline</span>
+        </div>
+    </div>
+</section>
 
-<div id="layout">
+<section id="vehicles">
+    <h2 style="margin-bottom: 30px;">FLOTTA ÁTTEKINTÉS</h2>
+    <div class="card-grid">
+        <div class="card">
+            <h3>T-100 STRIDER</h3>
+            <p>Típus: Nehéz villamos szállító</p>
+            <p>Páncélzat: Megerősített | Kapacitás: 120 fő</p>
+            <span class="badge active">Készenlétben</span>
+        </div>
+        <div class="card">
+            <h3>S-500 PHANTOM</h3>
+            <p>Típus: Gyorsreagálású egység</p>
+            <p>Páncélzat: Könnyű | Max sebesség: 80 km/h</p>
+            <span class="badge active">Készenlétben</span>
+        </div>
+    </div>
+</section>
 
-<div id="map">
-
-<svg id="network" viewBox="0 0 800 600">
-    <polyline points="60,300 240,280 420,300 600,330 760,320"
-        stroke="#a855f7" stroke-width="4" fill="none"/>
-    <polyline points="400,60 410,260 400,440 390,560"
-        stroke="#22c55e" stroke-width="4" fill="none"/>
-</svg>
-
-</div>
-
-<div id="side">
-
-<div class="block">
-    <h3>TELEMETRY</h3>
-    <p id="telemetry">NO VEHICLE SELECTED</p>
-</div>
-
-<div class="block">
-    <h3>NETWORK STATUS</h3>
-    <p id="status">AWAITING DATA STREAM…</p>
-</div>
-
-</div>
-
-</div>
+<section id="radar">
+    <h2 style="letter-spacing:2px">LIVE NETWORK SURVEILLANCE</h2>
+    <div id="layout">
+        <div id="map">
+            <svg id="network" viewBox="0 0 800 600">
+                <polyline points="60,300 240,280 420,300 600,330 760,320" stroke="#a855f7" stroke-width="4" fill="none" opacity="0.3"/>
+                <polyline points="400,60 410,260 400,440 390,560" stroke="#22c55e" stroke-width="4" fill="none" opacity="0.3"/>
+            </svg>
+        </div>
+        <div id="side">
+            <div class="block">
+                <h3>TELEMETRY</h3>
+                <p id="telemetry">VÁLASSZON EGYSÉGET A TÉRKÉPEN</p>
+            </div>
+            <div class="block">
+                <h3>NETWORK STATUS</h3>
+                <p id="status">ADATFOLYAMRA VÁRAKOZÁS…</p>
+            </div>
+        </div>
+    </div>
 </section>
 
 <script>
-const socket = io();
-const vehicles = {};
-const map = document.getElementById('map');
-let congestion = 0;
-
-/* PLAYER UPDATES ONLY */
-socket.on('tramUpdate', data => {
-
-    if(!vehicles[data.id]){
-        const el = document.createElement('div');
-        el.className = 'tram';
-        map.appendChild(el);
-
-        el.onclick = () => {
-            document.getElementById('telemetry').innerHTML = `
-            LINE: ${data.line}<br>
-            DRIVER: ${data.driver}<br>
-            SPEED: ${data.speed} km/h
-            `;
-        };
-
-        vehicles[data.id] = el;
+    /* TAB KEZELÉS */
+    function switchTab(tabId) {
+        document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-links button').forEach(b => b.classList.remove('active'));
+        
+        document.getElementById(tabId).classList.add('active');
+        document.getElementById('btn-' + tabId).classList.add('active');
     }
 
-    const v = vehicles[data.id];
-    const scale = 0.08;
+    /* RADAR LOGIKA */
+    const socket = io();
+    const vehicles = {};
+    const map = document.getElementById('map');
+    let congestion = 0;
 
-    const x = 400 + data.x * scale;
-    const y = 300 + data.z * scale;
+    socket.on('tramUpdate', data => {
+        if(!vehicles[data.id]){
+            const el = document.createElement('div');
+            el.className = 'tram';
+            map.appendChild(el);
 
-    v.style.left = x + 'px';
-    v.style.top = y + 'px';
-    v.style.transform = `translate(-50%,-50%) rotate(${data.heading}deg)`;
+            el.onclick = () => {
+                document.getElementById('telemetry').innerHTML = `
+                    <b>EGYSÉG:</b> ${data.id}<br>
+                    <b>VONAL:</b> ${data.line}<br>
+                    <b>VEZETŐ:</b> ${data.driver}<br>
+                    <b>SEBESSÉG:</b> ${data.speed} km/h
+                `;
+            };
+            vehicles[data.id] = el;
+        }
 
-    /* STATE COLOR */
-    if(data.speed < 5){
-        v.style.background = 'var(--bad)';
-        congestion++;
+        const v = vehicles[data.id];
+        const scale = 0.08;
+        const x = 400 + data.x * scale;
+        const y = 300 + data.z * scale;
 
-        const h = document.createElement('div');
-        h.className = 'heat';
-        h.style.left = (x-90)+'px';
-        h.style.top = (y-90)+'px';
-        map.appendChild(h);
-        setTimeout(()=>h.remove(),4000);
-    }
-    else if(data.speed < 15){
-        v.style.background = 'var(--warn)';
-    }
-    else{
-        v.style.background = 'var(--ok)';
-    }
-});
+        v.style.left = x + 'px';
+        v.style.top = y + 'px';
+        v.style.transform = `translate(-50%,-50%) rotate(${data.heading}deg)`;
 
-/* NETWORK ANALYSIS */
-setInterval(()=>{
-    const status = document.getElementById('status');
+        /* ÁLLAPOT SZÍN */
+        if(data.speed < 5){
+            v.style.background = 'var(--bad)';
+            congestion++;
+            const h = document.createElement('div');
+            h.className = 'heat';
+            h.style.left = (x-80)+'px';
+            h.style.top = (y-80)+'px';
+            map.appendChild(h);
+            setTimeout(()=>h.remove(), 4000);
+        } else if(data.speed < 15){
+            v.style.background = 'var(--warn)';
+        } else {
+            v.style.background = 'var(--ok)';
+        }
 
-    if(congestion > 6){
-        status.innerText = "CRITICAL CONGESTION DETECTED. IMMEDIATE ACTION REQUIRED.";
-    }
-    else if(congestion > 2){
-        status.innerText = "DELAY POCKETS FORMING. MONITOR INTERSECTIONS.";
-    }
-    else{
-        status.innerText = "NETWORK STABLE. ALL SYSTEMS NOMINAL.";
-    }
+        // Főoldali statisztika frissítése
+        document.getElementById('stat-active').innerText = Object.keys(vehicles).length;
+    });
 
-    congestion = 0;
-},1000);
+    /* NETWORK ANALÍZIS */
+    setInterval(()=>{
+        const status = document.getElementById('status');
+        const load = document.getElementById('stat-load');
+        
+        if(congestion > 6){
+            status.innerText = "KRITIKUS TORLÓDÁS. AZONNALI BEAVATKOZÁS SZÜKSÉGES.";
+            status.style.color = "var(--bad)";
+            load.innerText = "92%";
+        } else if(congestion > 2){
+            status.innerText = "FORGALMI LASSULÁS ÉSZLELHETŐ.";
+            status.style.color = "var(--warn)";
+            load.innerText = "54%";
+        } else {
+            status.innerText = "HÁLÓZAT STABIL. MINDEN RENDSZER NOMINÁLIS.";
+            status.style.color = "var(--ok)";
+            load.innerText = "12%";
+        }
+        congestion = 0;
+    }, 2000);
 </script>
 
 </body>
