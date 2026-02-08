@@ -1,245 +1,191 @@
 <!DOCTYPE html>
 <html lang="hu">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PROJECT GOB | DISPATCHER CENTER</title>
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VillamosSim</title>
 
-    <style>
-        :root {
-            --bg-body: #050505;
-            --bg-sidebar: #0d0d0f;
-            --bg-card: #121215;
-            --border: rgba(255, 255, 255, 0.08);
-            --accent-blue: #0084ff;
-            --accent-purple: #a855f7;
-            --text-main: #ffffff;
-            --text-dim: #8e8e93;
-            --ok: #22c55e;
-            --warn: #eab308;
-            --bad: #ef4444;
-            --glass-blur: blur(12px);
-        }
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background-color: var(--bg-body); color: var(--text-main); font-family: 'Inter', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+<style>
 
-        /* --- LOGIN OVERLAY --- */
-        #login-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-body); z-index: 1000; display: flex; align-items: center; justify-content: center;
-        }
-        .login-card { text-align: center; max-width: 400px; width: 90%; }
-        .login-btn { 
-            background: white; color: black; border: none; padding: 15px 30px; 
-            border-radius: 12px; font-weight: 800; cursor: pointer; display: flex; 
-            align-items: center; gap: 10px; margin: 20px auto; 
-        }
+body{
+margin:0;
+font-family:Inter;
+background:#0b0e14;
+color:white;
+overflow:hidden;
+}
 
-        /* --- SIDEBAR --- */
-        aside { width: 260px; background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px 0; }
-        .brand { padding: 0 25px 30px; display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 1.2rem; }
-        .brand i { color: var(--accent-blue); font-size: 1.5rem; }
-        .nav-item { width: 90%; margin: 4px auto; padding: 12px 20px; display: flex; align-items: center; gap: 15px; color: var(--text-dim); border-radius: 12px; cursor: pointer; border: none; background: transparent; transition: 0.3s; }
-        .nav-item.active { background: var(--accent-blue); color: white; }
-        .admin-only { display: none; color: var(--accent-purple) !important; }
+nav{
+display:flex;
+gap:10px;
+padding:15px;
+backdrop-filter:blur(14px);
+background:rgba(255,255,255,0.05);
+border-bottom:1px solid rgba(255,255,255,0.1);
+}
 
-        /* --- MAIN CONTENT --- */
-        main { flex-grow: 1; padding: 30px; overflow-y: auto; }
-        section { display: none; }
-        section.active { display: block; animation: fadeIn 0.4s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+nav button{
+background:none;
+border:none;
+color:white;
+padding:10px 15px;
+cursor:pointer;
+border-radius:10px;
+transition:.3s;
+}
 
-        .glass-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 25px; margin-bottom: 20px; }
+nav button:hover{
+background:rgba(255,255,255,0.1);
+}
 
-        /* --- MAP & TELEMETRY --- */
-        .map-view { height: 500px; background: #08080a; border-radius: 16px; position: relative; border: 1px solid var(--border); overflow: hidden; }
-        .tram { position: absolute; width: 14px; height: 14px; background: var(--accent-blue); border-radius: 3px; cursor: pointer; }
-        .tram-label { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 10px; white-space: nowrap; background: rgba(0,0,0,0.7); padding: 2px 5px; }
+.section{
+display:none;
+height:calc(100vh - 60px);
+overflow:auto;
+padding:25px;
+}
 
-        /* --- ADMIN PANEL ELEMENTS --- */
-        .admin-controls input { background: #1a1a1d; border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px; width: 100%; margin-bottom: 10px; }
-        .admin-controls button { background: var(--accent-purple); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
-    </style>
+.section.active{
+display:block;
+}
+
+.card{
+background:rgba(255,255,255,0.07);
+backdrop-filter:blur(18px);
+padding:20px;
+border-radius:16px;
+margin:10px 0;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+gap:15px;
+}
+
+input,select{
+padding:10px;
+border:none;
+border-radius:10px;
+margin:5px 0;
+width:100%;
+}
+
+button.primary{
+background:#3b82f6;
+}
+
+</style>
 </head>
+
 <body>
 
-    <div id="login-overlay">
-        <div class="glass-card login-card">
-            <i class="fa-solid fa-train-subway" style="font-size: 3rem; color: var(--accent-blue); margin-bottom: 20px;"></i>
-            <h2>Üdvözöljük a GOB Központban</h2>
-            <p style="color: var(--text-dim); margin-top: 10px;">A folytatáshoz hitelesítés szükséges.</p>
-            <button class="login-btn" onclick="mockLogin()">
-                <i class="fa-brands fa-roblox"></i> Bejelentkezés Robloxszal
-            </button>
-        </div>
-    </div>
+<nav>
+<button onclick="openSection('home')">🏠 Főoldal</button>
+<button onclick="openSection('downloads')">⬇️ Letöltések</button>
+<button onclick="openSection('vehicles')">🚋 Járművek</button>
+<button onclick="openSection('leaderboard')">🏆 Leaderboard</button>
+<button onclick="openSection('dispatcher')">📡 Diszpécser</button>
+<button onclick="openSection('admin')">⚙️ Admin</button>
+<button onclick="robloxLogin()">🔐 Roblox Login</button>
+</nav>
 
-    <aside>
-        <div class="brand"><i class="fa-solid fa-train-subway"></i> PROJECT GOB</div>
-        <div class="nav-group">
-            <button class="nav-item active" id="nav-home" onclick="showTab('home')"><i class="fa-solid fa-house"></i> Főoldal</button>
-            <button class="nav-item" id="nav-map" onclick="showTab('map')"><i class="fa-solid fa-map-location-dot"></i> Élő Térkép</button>
-            <button class="nav-item" id="nav-fleet" onclick="showTab('fleet')"><i class="fa-solid fa-list"></i> Flotta napló</button>
-            <button class="nav-item admin-only" id="nav-admin" onclick="showTab('admin')"><i class="fa-solid fa-bolt-lightning"></i> Admin Panel</button>
-        </div>
-        <div class="user-profile-mini">
-            <img id="user-avatar" class="mini-avatar" src="https://via.placeholder.com/40">
-            <div>
-                <div id="user-name" style="font-size: 0.85rem; font-weight: 600;">Vendég</div>
-                <div id="user-role" style="font-size: 0.7rem; color: var(--text-dim);">Látogató</div>
-            </div>
-        </div>
-    </aside>
+<!-- HOME -->
+<div id="home" class="section active">
+<h1>VillamosSim Dashboard</h1>
+<div class="card">
+<h3>🚦 Élő szerver</h3>
+<p id="serverStatus">Betöltés...</p>
+</div>
+</div>
 
-    <main>
-        <section id="home" class="active">
-            <div class="glass-card">
-                <h1>Hálózati Állapot</h1>
-                <div style="display: flex; gap: 20px; margin-top: 20px;">
-                    <div style="flex:1">Aktív járművek: <b id="count-active" style="color: var(--accent-blue);">0</b></div>
-                    <div style="flex:1">Szerver állapot: <b style="color: var(--ok);">ONLINE</b></div>
-                </div>
-            </div>
-            <div class="glass-card" id="telemetry-card">
-                <h3>Telemetria</h3>
-                <div id="telemetry-data" style="margin-top: 15px; color: var(--text-dim);">Kattints egy járműre a térképen...</div>
-            </div>
-        </section>
+<!-- DOWNLOADS -->
+<div id="downloads" class="section">
+<h2>Mod feltöltés</h2>
+<div class="card">
+<input placeholder="Mod neve">
+<input type="file">
+<button class="primary">Feltöltés</button>
+</div>
+</div>
 
-        <section id="map">
-            <div class="map-view" id="vehicle-layer">
-                </div>
-        </section>
+<!-- VEHICLES -->
+<div id="vehicles" class="section">
+<h2>Jármű adatbázis</h2>
+<div class="grid" id="vehicleList"></div>
+</div>
 
-        <section id="fleet">
-            <div class="glass-card">
-                <table width="100%" style="text-align: left; border-collapse: collapse;">
-                    <thead>
-                        <tr style="color: var(--text-dim); font-size: 0.8rem; border-bottom: 1px solid var(--border);">
-                            <th style="padding: 10px;">ID</th>
-                            <th>TÍPUS</th>
-                            <th>VONAL</th>
-                            <th>ÁLLAPOT</th>
-                        </tr>
-                    </thead>
-                    <tbody id="fleet-table-body"></tbody>
-                </table>
-            </div>
-        </section>
+<!-- LEADERBOARD -->
+<div id="leaderboard" class="section">
+<h2>Top Vezetők</h2>
+<div id="leaderboardList"></div>
+</div>
 
-        <section id="admin">
-            <div class="glass-card admin-controls">
-                <h2><i class="fa-solid fa-bullhorn"></i> Globális Értesítés</h2>
-                <p style="color: var(--text-dim); margin-bottom: 15px;">Üzenet küldése minden aktív járművezetőnek.</p>
-                <input type="text" id="admin-msg" placeholder="Írd ide az üzenetet...">
-                <button onclick="sendAdminNotify()">Üzenet Küldése</button>
-            </div>
-            <div class="glass-card">
-                <h3>Eseménynapló</h3>
-                <div id="event-log" style="font-family: monospace; font-size: 0.8rem; max-height: 200px; overflow-y: auto; margin-top: 15px;"></div>
-            </div>
-        </section>
-    </main>
+<!-- DISPATCHER -->
+<div id="dispatcher" class="section">
+<h2>RP Diszpécser</h2>
+<div class="card">
+<input placeholder="Járat">
+<select>
+<option>Késés</option>
+<option>Forgalom</option>
+<option>Műszaki hiba</option>
+</select>
+<button class="primary">Kiküldés</button>
+</div>
+</div>
 
-    <script>
-        const socket = io();
-        const vehicles = {};
-        const ADMIN_IDS = [2835565345]; // Ide írd a te Roblox ID-idat!
+<!-- ADMIN -->
+<div id="admin" class="section">
+<h2>Admin Panel</h2>
+<div class="card">
+<button class="primary">Hír küldése Discordra</button>
+<button class="primary">Banner frissítése</button>
+</div>
+</div>
 
-        // --- AUTH SIMULATION ---
-        function mockLogin() {
-            // Valódi rendszernél itt az OAuth2 futna le
-            const fakeUser = { id: 1234567, name: "Beni", role: "Admin" }; 
-            
-            document.getElementById('login-overlay').style.display = 'none';
-            document.getElementById('user-name').innerText = fakeUser.name;
-            document.getElementById('user-role').innerText = fakeUser.role;
+<script>
 
-            if(ADMIN_IDS.includes(fakeUser.id)) {
-                document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'flex');
-            }
-        }
+function openSection(id){
+document.querySelectorAll(".section")
+.forEach(s=>s.classList.remove("active"));
+document.getElementById(id).classList.add("active");
+}
 
-        function showTab(id) {
-            document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            document.getElementById('nav-' + id).classList.add('active');
-        }
+function robloxLogin(){
+window.location.href="/auth/roblox";
+}
 
-        // --- SOCKET LOGIC ---
-        socket.on('tramUpdate', data => {
-            const vehicleLayer = document.getElementById('vehicle-layer');
-            const fleetTable = document.getElementById('fleet-table-body');
+fetch("/api/server")
+.then(r=>r.json())
+.then(d=>{
+document.getElementById("serverStatus")
+.innerText=d.players+" játékos | "+d.map;
+});
 
-            if (!vehicles[data.id]) {
-                const div = document.createElement('div');
-                div.className = 'tram';
-                div.innerHTML = `<div class="tram-label">${data.id}</div>`;
-                div.onclick = () => showTelemetry(data);
-                vehicleLayer.appendChild(div);
-                vehicles[data.id] = div;
-                addLog(`Szerelvény belépett: ${data.id} (Vonal: ${data.line})`);
-            }
+fetch("/api/vehicles")
+.then(r=>r.json())
+.then(list=>{
+list.forEach(v=>{
+vehicleList.innerHTML+=`
+<div class="card">
+<h3>${v.name}</h3>
+</div>`;
+});
+});
 
-            const v = vehicles[data.id];
-            const scale = 0.5; // Állítsd be a térképed arányaihoz
-            v.style.left = (50 + data.x * scale) + '%'; 
-            v.style.top = (50 + data.z * scale) + '%';
-            v.style.transform = `translate(-50%, -50%) rotate(${data.heading}deg)`;
-            
-            v.style.background = (data.speed === 0) ? 'var(--bad)' : (data.speed > 50) ? '#3b82f6' : 'var(--accent-blue)';
+fetch("/api/leaderboard")
+.then(r=>r.json())
+.then(list=>{
+list.forEach(p=>{
+leaderboardList.innerHTML+=
+`<div class="card">${p.name} - ${p.km} km</div>`;
+});
+});
 
-            updateFleetTable(data);
-            document.getElementById('count-active').innerText = Object.keys(vehicles).length;
-        });
+</script>
 
-        function sendAdminNotify() {
-            const msg = document.getElementById('admin-msg').value;
-            if(msg) {
-                socket.emit('adminAction', { type: 'notify', message: msg });
-                addLog(`Admin üzenet kiküldve: ${msg}`);
-                document.getElementById('admin-msg').value = '';
-            }
-        }
-
-        function showTelemetry(data) {
-            document.getElementById('telemetry-data').innerHTML = `
-                <div class="glass-card" style="margin:0; padding:10px; border:none; background:rgba(255,255,255,0.05)">
-                    <b>Pályaszám:</b> ${data.id}<br>
-                    <b>Vonal:</b> ${data.line}<br>
-                    <b>Vezető:</b> ${data.driver}<br>
-                    <b>Sebesség:</b> ${data.speed} km/h<br>
-                    <b>Státusz:</b> ${data.speed > 0 ? 'FORGALOMBAN' : 'VÁRAKOZIK'}
-                </div>
-            `;
-        }
-
-        function addLog(msg) {
-            const log = document.getElementById('event-log');
-            const now = new Date();
-            const time = now.getHours() + ":" + now.getMinutes().toString().padStart(2, '0');
-            log.innerHTML = `<div style="padding:4px; border-bottom:1px solid #222;"><span style="color:var(--accent-blue)">[${time}]</span> ${msg}</div>` + log.innerHTML;
-        }
-
-        function updateFleetTable(data) {
-            const fleetTable = document.getElementById('fleet-table-body');
-            let row = document.getElementById('row-' + data.id);
-            if (!row) {
-                row = fleetTable.insertRow();
-                row.id = 'row-' + data.id;
-            }
-            row.innerHTML = `
-                <td style="padding:12px;"><b>${data.id}</b></td>
-                <td>Tatra T5C5</td>
-                <td>${data.line}</td>
-                <td style="color:${data.speed > 0 ? 'var(--ok)' : 'var(--warn)'}">${data.speed > 0 ? 'MENETBEN' : 'ÁLL'}</td>
-            `;
-        }
-    </script>
 </body>
 </html>
