@@ -2,7 +2,7 @@
 <html lang="hu">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>VillamosSim</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
@@ -24,6 +24,7 @@ padding:15px;
 backdrop-filter:blur(14px);
 background:rgba(255,255,255,0.05);
 border-bottom:1px solid rgba(255,255,255,0.1);
+flex-wrap:wrap;
 }
 
 nav button{
@@ -42,7 +43,7 @@ background:rgba(255,255,255,0.1);
 
 .section{
 display:none;
-height:calc(100vh - 60px);
+height:calc(100vh - 70px);
 overflow:auto;
 padding:25px;
 }
@@ -89,21 +90,32 @@ background:#3b82f6;
 <button onclick="openSection('leaderboard')">🏆 Leaderboard</button>
 <button onclick="openSection('dispatcher')">📡 Diszpécser</button>
 <button onclick="openSection('admin')">⚙️ Admin</button>
-<button onclick="robloxLogin()">🔐 Roblox Login</button>
 </nav>
 
 <!-- HOME -->
 <div id="home" class="section active">
-<h1>VillamosSim Dashboard</h1>
+
+<h1>🚋 VillamosSim Dashboard</h1>
+
 <div class="card">
-<h3>🚦 Élő szerver</h3>
+<h3 id="loginStatus">Betöltés...</h3>
+<button class="primary" onclick="robloxLogin()">🔐 Roblox Login</button>
+<a href="/auth/logout"><button>Kijelentkezés</button></a>
+<a href="https://discord.gg" target="_blank">
+<button>💬 Discord</button>
+</a>
+</div>
+
+<div class="card">
+<h3>🚦 Élő szerver állapot</h3>
 <p id="serverStatus">Betöltés...</p>
 </div>
+
 </div>
 
 <!-- DOWNLOADS -->
 <div id="downloads" class="section">
-<h2>Mod feltöltés</h2>
+<h2>⬇️ Mod feltöltés</h2>
 <div class="card">
 <input placeholder="Mod neve">
 <input type="file">
@@ -113,19 +125,19 @@ background:#3b82f6;
 
 <!-- VEHICLES -->
 <div id="vehicles" class="section">
-<h2>Jármű adatbázis</h2>
+<h2>🚋 Jármű adatbázis</h2>
 <div class="grid" id="vehicleList"></div>
 </div>
 
 <!-- LEADERBOARD -->
 <div id="leaderboard" class="section">
-<h2>Top Vezetők</h2>
+<h2>🏆 Leaderboard</h2>
 <div id="leaderboardList"></div>
 </div>
 
 <!-- DISPATCHER -->
 <div id="dispatcher" class="section">
-<h2>RP Diszpécser</h2>
+<h2>📡 RP Diszpécser</h2>
 <div class="card">
 <input placeholder="Járat">
 <select>
@@ -139,10 +151,10 @@ background:#3b82f6;
 
 <!-- ADMIN -->
 <div id="admin" class="section">
-<h2>Admin Panel</h2>
+<h2>⚙️ Admin Panel</h2>
 <div class="card">
-<button class="primary">Hír küldése Discordra</button>
-<button class="primary">Banner frissítése</button>
+<button class="primary">Discord hír küldés</button>
+<button class="primary">Banner frissítés</button>
 </div>
 </div>
 
@@ -155,27 +167,42 @@ document.getElementById(id).classList.add("active");
 }
 
 function robloxLogin(){
-window.location.href="/auth/roblox";
+window.location="/auth/roblox";
 }
 
+// LOGIN CHECK
+async function checkLogin(){
+const res=await fetch("/api/me");
+const user=await res.json();
+
+if(user){
+document.getElementById("loginStatus")
+.innerText="✅ Bejelentkezve Robloxbal";
+}else{
+document.getElementById("loginStatus")
+.innerText="❌ Nincs bejelentkezve";
+}
+}
+
+// SERVER STATUS
 fetch("/api/server")
 .then(r=>r.json())
 .then(d=>{
-document.getElementById("serverStatus")
-.innerText=d.players+" játékos | "+d.map;
+serverStatus.innerText=
+d.players+" játékos | "+d.map;
 });
 
+// VEHICLES
 fetch("/api/vehicles")
 .then(r=>r.json())
 .then(list=>{
 list.forEach(v=>{
-vehicleList.innerHTML+=`
-<div class="card">
-<h3>${v.name}</h3>
-</div>`;
+vehicleList.innerHTML+=
+`<div class="card"><h3>${v.name}</h3></div>`;
 });
 });
 
+// LEADERBOARD
 fetch("/api/leaderboard")
 .then(r=>r.json())
 .then(list=>{
@@ -184,6 +211,8 @@ leaderboardList.innerHTML+=
 `<div class="card">${p.name} - ${p.km} km</div>`;
 });
 });
+
+checkLogin();
 
 </script>
 
