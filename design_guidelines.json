@@ -1,0 +1,157 @@
+{
+  "design_system": {
+    "typography": {
+      "font_family": {
+        "heading": "Manrope, sans-serif",
+        "body": "Inter, sans-serif",
+        "mono": "JetBrains Mono, monospace"
+      },
+      "scale": {
+        "h1": "text-4xl md:text-6xl font-bold tracking-tight",
+        "h2": "text-3xl md:text-4xl font-semibold tracking-tight",
+        "h3": "text-2xl font-semibold",
+        "body": "text-base leading-relaxed text-muted-foreground",
+        "small": "text-sm font-medium text-muted-foreground"
+      }
+    },
+    "colors": {
+      "palette": {
+        "name": "Slate & Steel",
+        "description": "A monochromatic, engineering-focused palette using cool slates and zincs. High contrast for readability, soft backgrounds for depth.",
+        "light": {
+          "background": "210 40% 98%",
+          "foreground": "222 47% 11%",
+          "card": "0 0% 100%",
+          "card_foreground": "222 47% 11%",
+          "popover": "0 0% 100%",
+          "popover_foreground": "222 47% 11%",
+          "primary": "222 47% 11%",
+          "primary_foreground": "210 40% 98%",
+          "secondary": "210 40% 96.1%",
+          "secondary_foreground": "222 47% 11%",
+          "muted": "210 40% 96.1%",
+          "muted_foreground": "215.4 16.3% 46.9%",
+          "accent": "210 40% 96.1%",
+          "accent_foreground": "222 47% 11%",
+          "destructive": "0 84.2% 60.2%",
+          "destructive_foreground": "210 40% 98%",
+          "border": "214.3 31.8% 91.4%",
+          "input": "214.3 31.8% 91.4%",
+          "ring": "222 47% 11%"
+        },
+        "dark": {
+          "background": "222 47% 11%",
+          "foreground": "210 40% 98%",
+          "card": "222 47% 11%",
+          "card_foreground": "210 40% 98%",
+          "popover": "222 47% 11%",
+          "popover_foreground": "210 40% 98%",
+          "primary": "210 40% 98%",
+          "primary_foreground": "222 47% 11%",
+          "secondary": "217.2 32.6% 17.5%",
+          "secondary_foreground": "210 40% 98%",
+          "muted": "217.2 32.6% 17.5%",
+          "muted_foreground": "215 20.2% 65.1%",
+          "accent": "217.2 32.6% 17.5%",
+          "accent_foreground": "210 40% 98%",
+          "destructive": "0 62.8% 30.6%",
+          "destructive_foreground": "210 40% 98%",
+          "border": "217.2 32.6% 17.5%",
+          "input": "217.2 32.6% 17.5%",
+          "ring": "212.7 26.8% 83.9%"
+        }
+      }
+    },
+    "spacing": {
+      "container_padding": "px-4 md:px-8 lg:px-12",
+      "section_spacing": "py-16 md:py-24",
+      "element_spacing": "space-y-6"
+    },
+    "visual_enhancers": {
+      "radius": "1rem",
+      "glassmorphism": "bg-background/80 backdrop-blur-md border-b",
+      "shadows": "shadow-lg shadow-slate-900/5",
+      "gradients": "bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950"
+    }
+  },
+  "components": {
+    "Button": {
+      "variant": "default",
+      "radius": "rounded-full",
+      "class": "font-medium transition-all hover:scale-105 active:scale-95"
+    },
+    "Card": {
+      "variant": "soft",
+      "radius": "rounded-2xl",
+      "class": "border-none shadow-sm bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+    },
+    "Input": {
+      "radius": "rounded-xl",
+      "class": "bg-slate-50 dark:bg-slate-900 border-transparent focus:border-primary"
+    }
+  },
+  "layout_strategies": {
+    "grid_system": "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8",
+    "bento_grid": "grid grid-cols-1 md:grid-cols-4 gap-4 auto-rows-[300px]",
+    "container": "max-w-7xl mx-auto"
+  },
+  "image_urls": {
+    "hero": {
+      "url": "https://images.unsplash.com/photo-1770323874881-4d6e4214e2ab?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "alt": "Modern tram at station",
+      "category": "hero"
+    },
+    "gallery": [
+      {
+        "url": "https://images.unsplash.com/photo-1763334699075-29267a5e4d18?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Red and white streetcar",
+        "category": "gallery"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1764470739479-2b079f2c14c1?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Yellow tram city street",
+        "category": "gallery"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1766150194816-204b43ff4377?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Modern yellow tram",
+        "category": "gallery"
+      }
+    ],
+    "team": [
+      {
+        "url": "https://images.unsplash.com/photo-1602566356438-dd36d35e989c?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Team Member 1",
+        "category": "team"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1668262738576-642a950e8a95?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Team Member 2",
+        "category": "team"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1624377103868-c780d0fa2b4c?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Team Member 3",
+        "category": "team"
+      }
+    ]
+  },
+  "instructions_to_main_agent": [
+    "THEME: Implement the 'Slate & Steel' palette defined in colors. This is a strict requirement. Do not use default Tailwind colors.",
+    "ROUNDNESS: Use 'rounded-2xl' or 'rounded-3xl' for all cards and containers to meet the 'Soft/rounded style' requirement.",
+    "FONTS: Import 'Manrope' for headings and 'Inter' for body from Google Fonts.",
+    "LANGUAGE: Implement a context provider for Language (EN/HU). All text content must be keyed.",
+    "NAVIGATION: Create a responsive navbar with the following links: Home, Gallery, News, Team, FAQ, Vehicles, Contact.",
+    "CONTACT: The contact page must NOT have a form. Only display social media links (Discord, Instagram, Facebook, YouTube) with large, styled cards.",
+    "VEHICLES: Use the gallery images for the Vehicles page as well, adding fake specs (Speed, Capacity, Year).",
+    "ANIMATION: Use 'framer-motion' for page transitions and hover effects. All cards should lift slightly on hover.",
+    "TESTING: Add 'data-testid' to all interactive elements (buttons, links, inputs)."
+  ],
+  "universal_guidelines": [
+    "Do not use gradients for text.",
+    "Ensure all text has sufficient contrast (APCA standards).",
+    "Use 'sonner' for notifications.",
+    "Use 'lucide-react' for icons.",
+    "Mobile-first responsive design is mandatory."
+  ]
+}
